@@ -3,11 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@fluentui/react-components": "^9.59.0",
+    "@fluentui/react-components": "^9.60.0",
+    "@fluentui/react-icons": "^2.0.274",
+    "@fluentui/react-nav-preview": "^0.12.0",
     "@types/jest": "^27.5.2",
-    "react": "^17.0.0",
-    "react-dom": "^17.0.0",
-    "react-scripts": "5.0.1",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-router-dom": "^7.2.0",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   },
@@ -15,8 +17,7 @@
   "scripts": {
     "build": "react-scripts build",
     "eject": "react-scripts eject",
-    "lint": "eslint ./src --ext \".js,.jsx,.ts,.tsx\" && stylelint \"./src/**/*.css\"",
-    "lint:fix": "eslint ./src --ext \".js,.jsx,.ts,.tsx\" --fix && stylelint \"./src/**/*.css\" --fix",
+    "format": "prettier --ignore-path .gitignore, --write \"src/*.+(jsx|js|tsx|ts|json)\"",
     "start": "nf start -p 3000",
     "test": "react-scripts test",
     "build-electron": "tsc --project electron/tsconfig.json",
@@ -26,10 +27,7 @@
     "dist": "npm run build && npm run build-electron && electron-builder build -c.extraMetadata.main=build/electron/main.js"
   },
   "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "extends": []
   },
   "browserslist": {
     "production": [
@@ -45,14 +43,22 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.4",
-    "@types/react": "^18.3.18",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@typescript-eslint/eslint-plugin": "^8.24.1",
+    "@typescript-eslint/parser": "^8.24.1",
     "cross-env": "^7.0.3",
     "electron": "^34.2.0",
     "electron-builder": "^25.1.8",
+    "eslint": "^9.20.1",
+    "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-react": "^7.37.4",
     "foreman": "^3.0.1",
     "nodemon": "^3.1.9",
+    "prettier": "^3.5.1",
+    "react-scripts": "^5.0.1",
     "ts-node": "^10.9.2",
-    "tslib": "^2.8.1"
+    "tslib": "^2.8.1",
+    "typescript-eslint": "^8.24.1"
   }
 }
