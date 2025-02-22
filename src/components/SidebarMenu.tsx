@@ -1,20 +1,19 @@
-import React from 'react'
-import { DrawerProps } from '@fluentui/react-components'
+import * as React from 'react'
 import {
   AppItem,
-  Hamburger,
   NavCategory,
   NavCategoryItem,
   NavDivider,
   NavDrawer,
   NavDrawerBody,
   NavDrawerHeader,
-  NavDrawerProps,
   NavItem,
   NavSectionHeader,
   NavSubItem,
   NavSubItemGroup,
 } from '@fluentui/react-nav-preview'
+
+import { makeStyles, tokens } from '@fluentui/react-components'
 import {
   Board20Filled,
   Board20Regular,
@@ -46,22 +45,11 @@ import {
   PersonCircle32Regular,
 } from '@fluentui/react-icons'
 
-import {
-  Label,
-  Radio,
-  RadioGroup,
-  Switch,
-  Tooltip,
-  useId,
-  tokens,
-  makeStyles,
-} from '@fluentui/react-components'
-
 const useStyles = makeStyles({
   root: {
     overflow: 'hidden',
     display: 'flex',
-    height: '600px',
+    height: 'calc(100vh - 112px)',
   },
   content: {
     flex: '1',
@@ -99,40 +87,30 @@ const Reports = bundleIcon(
   DocumentBulletListMultiple20Regular,
 )
 
-type DrawerType = Required<DrawerProps>['type']
-
-export const Basic = (props: Partial<NavDrawerProps>) => {
+const SidebarMenu = (props: {
+  children:
+    | string
+    | number
+    | boolean
+    | React.ReactElement<any, string | React.JSXElementConstructor<any>>
+    | Iterable<React.ReactNode>
+    | React.ReactPortal
+    | null
+    | undefined
+}) => {
   const styles = useStyles()
 
-  const typeLableId = useId('type-label')
-  const linkLabelId = useId('link-label')
-  const multipleLabelId = useId('multiple-label')
-
-  const [isOpen, setIsOpen] = React.useState(true)
-  const [enabledLinks, setEnabledLinks] = React.useState(true)
-  const [type, setType] = React.useState<DrawerType>('inline')
-  const [isMultiple, setIsMultiple] = React.useState(true)
-
-  const linkDestination = enabledLinks ? 'https://www.bing.com' : ''
-
-  const renderHamburgerWithToolTip = () => {
-    return (
-      <Tooltip content="Navigation" relationship="label">
-        <Hamburger onClick={() => setIsOpen(!isOpen)} />
-      </Tooltip>
-    )
-  }
+  const linkDestination = ''
 
   return (
     <div className={styles.root}>
       <NavDrawer
         defaultSelectedValue="2"
         defaultSelectedCategoryValue=""
-        open={isOpen}
-        type={type}
-        multiple={isMultiple}
+        open={true}
+        type="inline"
       >
-        <NavDrawerHeader>{renderHamburgerWithToolTip()}</NavDrawerHeader>
+        <NavDrawerHeader></NavDrawerHeader>
 
         <NavDrawerBody>
           <AppItem
@@ -227,35 +205,8 @@ export const Basic = (props: Partial<NavDrawerProps>) => {
           </NavItem>
         </NavDrawerBody>
       </NavDrawer>
-      <div className={styles.content}>
-        {!isOpen && renderHamburgerWithToolTip()}
-        <div className={styles.field}>
-          <Label id={typeLableId}>Type</Label>
-          <RadioGroup
-            value={type}
-            onChange={(_, data) => setType(data.value as DrawerType)}
-            aria-labelledby={typeLableId}
-          >
-            <Radio value="overlay" label="Overlay (Default)" />
-            <Radio value="inline" label="Inline" />
-          </RadioGroup>
-          <Label id={linkLabelId}>Links</Label>
-          <Switch
-            checked={enabledLinks}
-            onChange={(_, data) => setEnabledLinks(!!data.checked)}
-            label={enabledLinks ? 'Enabled' : 'Disabled'}
-            aria-labelledby={linkLabelId}
-          />
-
-          <Label id={multipleLabelId}>Categories</Label>
-          <Switch
-            checked={isMultiple}
-            onChange={(_, data) => setIsMultiple(!!data.checked)}
-            label={isMultiple ? 'Multiple' : 'Single'}
-            aria-labelledby={multipleLabelId}
-          />
-        </div>
-      </div>
+      <div className={styles.content}>{props.children}</div>
     </div>
   )
 }
+export default SidebarMenu
