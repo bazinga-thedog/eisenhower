@@ -1,6 +1,5 @@
 import { createContext, useState } from 'react'
 import { User } from '../types/user'
-import Auth from '../types/Auth'
 
 const AuthContext = createContext({
   user: {} as User,
