@@ -1,0 +1,3 @@
+interface INavBarOptionalProps {
+  hasLoggedUser?: boolean
+}

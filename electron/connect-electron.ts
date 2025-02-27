@@ -1,35 +1,37 @@
-import * as net from 'net';
-import * as childProcess from 'child_process';
+import * as net from 'net'
+import * as childProcess from 'child_process'
 
 // Adjust port so that Electron hits React
-const port: number = process.env.PORT ? Number.parseInt(process.env.PORT, 10) - 100 : 3000;
+const port: number = process.env.PORT
+  ? Number.parseInt(process.env.PORT, 10) - 100
+  : 3000
 
-process.env.ELECTRON_START_URL = `http://localhost:${port}`;
+process.env.ELECTRON_START_URL = `http://localhost:${port}/Login`
 
-const client = new net.Socket();
-let startedElectron = false;
+const client = new net.Socket()
+let startedElectron = false
 
 const tryConnection = () => {
-  client.connect(
-    { port },
-    () => {
-      client.end();
+  client.connect({ port }, () => {
+    client.end()
 
-      if (!startedElectron) {
-        startedElectron = true;
-        console.log('starting electron');
+    if (!startedElectron) {
+      startedElectron = true
+      console.log('starting electron')
 
-        childProcess.exec('nodemon --watch "build"  --exec "electron ." --inspect=5858', {
-          windowsHide: true
-        });
-      }
+      childProcess.exec(
+        'nodemon --watch "build"  --exec "electron ." --inspect=5858',
+        {
+          windowsHide: true,
+        },
+      )
     }
-  )
-};
+  })
+}
 
-tryConnection();
+tryConnection()
 
-client.on('error', (err) => {
-  console.log('Retrying...', err);
-  setTimeout(tryConnection, 1000);
-});
+client.on('error', err => {
+  console.log('Retrying...', err)
+  setTimeout(tryConnection, 1000)
+})

@@ -11,10 +11,13 @@ export const Content = (props: {
     | React.ReactPortal
     | null
     | undefined
+  showSidebar: boolean
 }) => {
   return (
     <div>
-      <SidebarMenu>{props.children}</SidebarMenu>
+      <SidebarMenu showSidebar={props.showSidebar}>
+        {props.children}
+      </SidebarMenu>
     </div>
   )
 }

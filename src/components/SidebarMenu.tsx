@@ -97,6 +97,7 @@ const SidebarMenu = (props: {
     | React.ReactPortal
     | null
     | undefined
+  showSidebar: boolean
 }) => {
   const styles = useStyles()
 
@@ -107,7 +108,7 @@ const SidebarMenu = (props: {
       <NavDrawer
         defaultSelectedValue="2"
         defaultSelectedCategoryValue=""
-        open={true}
+        open={props.showSidebar}
         type="inline"
       >
         <NavDrawerHeader></NavDrawerHeader>
