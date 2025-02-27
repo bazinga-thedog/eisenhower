@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { Button, Input, Label } from '@fluentui/react-components'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { Button, Input, Label } from '@fluentui/react-components'
 import Auth from '../types/Auth'
+import { authenticate } from '../services/AuthService'
 import useAuth from '../hooks/useAuth'
 
 import '../assets/style/Login.css'
@@ -58,7 +59,7 @@ const Login = () => {
         throw new Error(error.error || 'Failed to sign in.')
       }
 
-      const authData: Auth = await response.json()
+      const authData: Auth = await authenticate(data.username, data.password)
 
       setAuth({
         user: authData.user,

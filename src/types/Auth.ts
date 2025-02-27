@@ -1,4 +1,4 @@
-import { User } from './user'
+import { User } from './User'
 
 interface Auth {
   user: User
