@@ -22,7 +22,7 @@ import { getAllPages } from '../services/PageService'
 import auth from '../hooks/useAuth'
 import Page from '../types/Page'
 import DynamicIcon from './DynamicIcon'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { PagesContext } from '../context/PagesContext'
 
 const useStyles = makeStyles({
@@ -50,8 +50,6 @@ const useStyles = makeStyles({
   },
 })
 
-//const JobPostings = bundleIcon(PersonSettings20Regular, NotePin20Regular)
-
 const SidebarMenu = (props: {
   children:
     | string
@@ -64,9 +62,13 @@ const SidebarMenu = (props: {
     | undefined
   showSidebar: boolean
 }) => {
-  const styles = useStyles()
+  const navigate = useNavigate()
 
-  const linkDestination = ''
+  const navToPage = (url: string) => {
+    navigate(url)
+  }
+
+  const styles = useStyles()
 
   const accessToken = auth().accessToken
   const username = auth().user.name
@@ -116,11 +118,9 @@ const SidebarMenu = (props: {
           className={styles.navbackground}
         >
           <NavDrawerHeader>
-            {' '}
             <AppItem
               icon={<PersonCircle32Regular />}
-              as="a"
-              href={linkDestination}
+              onClick={() => navToPage('/')}
               key="user"
               className={styles.navbackground}
             >
@@ -145,7 +145,7 @@ const SidebarMenu = (props: {
                       {page.children.map(p => {
                         return (
                           <NavSubItem
-                            href={p.location}
+                            onClick={() => navToPage('/' + p.location)}
                             value={p.order.toString()}
                             key={p.parent + '_' + p.order.toString()}
                             className={styles.navbackground}
@@ -169,7 +169,7 @@ const SidebarMenu = (props: {
       </div>
     )
   } else {
-    return <div>Loading...</div>
+    return <div>Side Menu Loading...</div>
   }
 }
 export default SidebarMenu

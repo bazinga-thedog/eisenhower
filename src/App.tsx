@@ -18,7 +18,7 @@ export default function App() {
     <FluentProvider theme={webLightTheme} className="App">
       <BrowserRouter>
         <AuthProvider>
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<div>Suspense Loading...</div>}>
             <Routes>
               <Route path="/" element={<Layout />}>
                 {/* public routes*/}
