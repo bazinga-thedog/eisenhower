@@ -42,23 +42,6 @@ const Login = () => {
       setIsSubmitting(true)
       setErrors({})
 
-      const response: Response = await fetch('http://localhost:3030/api/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: data.username,
-          password: data.password,
-        }),
-        credentials: 'include',
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to sign in.')
-      }
-
       const authData: Auth = await authenticate(data.username, data.password)
 
       setAuth({

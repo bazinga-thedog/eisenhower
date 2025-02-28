@@ -30,6 +30,7 @@ export default function App() {
                     }
                   >
                     <Route path="/" element={<ContentPage />} />
+                    <Route path="/permissions" element={<ContentPage />} />
                     <Route path="/test" element={<TestPage />} />
                   </Route>
                 </Route>

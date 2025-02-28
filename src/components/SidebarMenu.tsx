@@ -3,11 +3,9 @@ import {
   AppItem,
   NavCategory,
   NavCategoryItem,
-  NavDivider,
   NavDrawer,
   NavDrawerBody,
   NavDrawerHeader,
-  NavItem,
   NavSectionHeader,
   NavSubItem,
   NavSubItemGroup,
@@ -15,35 +13,16 @@ import {
 
 import { makeStyles, tokens } from '@fluentui/react-components'
 import {
-  Board20Filled,
-  Board20Regular,
-  BoxMultiple20Filled,
-  BoxMultiple20Regular,
-  DataArea20Filled,
-  DataArea20Regular,
-  DocumentBulletListMultiple20Filled,
-  DocumentBulletListMultiple20Regular,
-  HeartPulse20Filled,
-  HeartPulse20Regular,
-  MegaphoneLoud20Filled,
-  MegaphoneLoud20Regular,
-  NotePin20Filled,
-  NotePin20Regular,
-  People20Filled,
-  People20Regular,
-  PeopleStar20Filled,
-  PeopleStar20Regular,
-  Person20Filled,
-  PersonLightbulb20Filled,
-  PersonLightbulb20Regular,
-  Person20Regular,
-  PersonSearch20Filled,
-  PersonSearch20Regular,
-  PreviewLink20Filled,
-  PreviewLink20Regular,
-  bundleIcon,
+  /*NotePin20Regular,
+  bundleIcon,*/
   PersonCircle32Regular,
 } from '@fluentui/react-icons'
+import { useEffect, useState } from 'react'
+import { getAllPages } from '../services/PageService'
+import auth from '../hooks/useAuth'
+import Page from '../types/Page'
+import DynamicIcon from './DynamicIcon'
+import { useLocation } from 'react-router-dom'
 
 const useStyles = makeStyles({
   root: {
@@ -67,25 +46,7 @@ const useStyles = makeStyles({
   },
 })
 
-const Person = bundleIcon(Person20Filled, Person20Regular)
-const Dashboard = bundleIcon(Board20Filled, Board20Regular)
-const Announcements = bundleIcon(MegaphoneLoud20Filled, MegaphoneLoud20Regular)
-const EmployeeSpotlight = bundleIcon(
-  PersonLightbulb20Filled,
-  PersonLightbulb20Regular,
-)
-const Search = bundleIcon(PersonSearch20Filled, PersonSearch20Regular)
-const PerformanceReviews = bundleIcon(PreviewLink20Filled, PreviewLink20Regular)
-const JobPostings = bundleIcon(NotePin20Filled, NotePin20Regular)
-const Interviews = bundleIcon(People20Filled, People20Regular)
-const HealthPlans = bundleIcon(HeartPulse20Filled, HeartPulse20Regular)
-const TrainingPrograms = bundleIcon(BoxMultiple20Filled, BoxMultiple20Regular)
-const CareerDevelopment = bundleIcon(PeopleStar20Filled, PeopleStar20Regular)
-const Analytics = bundleIcon(DataArea20Filled, DataArea20Regular)
-const Reports = bundleIcon(
-  DocumentBulletListMultiple20Filled,
-  DocumentBulletListMultiple20Regular,
-)
+//const JobPostings = bundleIcon(PersonSettings20Regular, NotePin20Regular)
 
 const SidebarMenu = (props: {
   children:
@@ -103,107 +64,76 @@ const SidebarMenu = (props: {
 
   const linkDestination = ''
 
+  const accessToken = auth().accessToken
+  const username = auth().user.name
+
+  const [pages, setPages] = useState([] as Page[])
+  const [navIndex, setNavIndex] = useState(0)
+
+  const location = useLocation()
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const pages = await getAllPages(accessToken)
+      const index =
+        pages
+          .map(x => x.children)[0]
+          .filter(p => location.pathname.includes(p.location))[0]?.order ?? 0
+      setNavIndex(index)
+      setPages(pages)
+    }
+
+    // call the function
+    fetchData()
+      // make sure to catch any error
+      .catch(console.error)
+  }, [])
+
   return (
     <div className={styles.root}>
       <NavDrawer
-        defaultSelectedValue="2"
+        selectedValue={navIndex.toString()}
         defaultSelectedCategoryValue=""
         open={props.showSidebar}
         type="inline"
       >
         <NavDrawerHeader></NavDrawerHeader>
-
         <NavDrawerBody>
           <AppItem
             icon={<PersonCircle32Regular />}
             as="a"
             href={linkDestination}
           >
-            Contoso HR
+            {username}
           </AppItem>
-          <NavItem href={linkDestination} icon={<Dashboard />} value="1">
-            Dashboard
-          </NavItem>
-          <NavItem href={linkDestination} icon={<Announcements />} value="2">
-            Announcements
-          </NavItem>
-          <NavItem
-            href={linkDestination}
-            icon={<EmployeeSpotlight />}
-            value="3"
-          >
-            Employee Spotlight
-          </NavItem>
-          <NavItem icon={<Search />} href={linkDestination} value="4">
-            Profile Search
-          </NavItem>
-          <NavItem
-            icon={<PerformanceReviews />}
-            href={linkDestination}
-            value="5"
-          >
-            Performance Reviews
-          </NavItem>
-          <NavSectionHeader>Employee Management</NavSectionHeader>
-          <NavCategory value="6">
-            <NavCategoryItem icon={<JobPostings />}>
-              Job Postings
-            </NavCategoryItem>
-            <NavSubItemGroup>
-              <NavSubItem href={linkDestination} value="7">
-                Openings
-              </NavSubItem>
-              <NavSubItem href={linkDestination} value="8">
-                Submissions
-              </NavSubItem>
-            </NavSubItemGroup>
+          <NavSectionHeader>Administration</NavSectionHeader>
+          <NavCategory value="1">
+            {pages.map(page => {
+              return (
+                <div>
+                  <NavCategoryItem
+                    key={page.order.toString()}
+                    icon={<DynamicIcon tag={page.icon} />}
+                    value={page.order}
+                  >
+                    {page.name}
+                  </NavCategoryItem>
+                  <NavSubItemGroup>
+                    {page.children.map(p => {
+                      return (
+                        <NavSubItem
+                          href={p.location}
+                          value={p.order.toString()}
+                        >
+                          {p.name}
+                        </NavSubItem>
+                      )
+                    })}
+                  </NavSubItemGroup>
+                </div>
+              )
+            })}
           </NavCategory>
-          <NavItem icon={<Interviews />} value="9">
-            Interviews
-          </NavItem>
-
-          <NavSectionHeader>Benefits</NavSectionHeader>
-          <NavItem icon={<HealthPlans />} value="10">
-            Health Plans
-          </NavItem>
-          <NavCategory value="11">
-            <NavCategoryItem icon={<Person />} value="12">
-              Retirement
-            </NavCategoryItem>
-            <NavSubItemGroup>
-              <NavSubItem href={linkDestination} value="13">
-                Plan Information
-              </NavSubItem>
-              <NavSubItem href={linkDestination} value="14">
-                Fund Performance
-              </NavSubItem>
-            </NavSubItemGroup>
-          </NavCategory>
-
-          <NavSectionHeader>Learning</NavSectionHeader>
-          <NavItem icon={<TrainingPrograms />} value="15">
-            Training Programs
-          </NavItem>
-          <NavCategory value="16">
-            <NavCategoryItem icon={<CareerDevelopment />}>
-              Career Development
-            </NavCategoryItem>
-            <NavSubItemGroup>
-              <NavSubItem href={linkDestination} value="17">
-                Career Paths
-              </NavSubItem>
-              <NavSubItem href={linkDestination} value="18">
-                Planning
-              </NavSubItem>
-            </NavSubItemGroup>
-          </NavCategory>
-          <NavDivider />
-          <NavItem target="_blank" icon={<Analytics />} value="19">
-            Workforce Data
-          </NavItem>
-          <NavItem href={linkDestination} icon={<Reports />} value="20">
-            Reports
-          </NavItem>
         </NavDrawerBody>
       </NavDrawer>
       <div className={styles.content}>{props.children}</div>
