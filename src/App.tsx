@@ -11,6 +11,7 @@ import RequireAuth from './components/RequireAuth'
 import { AuthProvider } from './context/AuthProvider'
 import PersistLogin from './components/PersistLogin'
 import TestPage from './pages/TestPage'
+import PoliciesPage from './pages/PoliciesPage'
 
 export default function App() {
   return (
@@ -30,7 +31,7 @@ export default function App() {
                     }
                   >
                     <Route path="/" element={<ContentPage />} />
-                    <Route path="/permissions" element={<ContentPage />} />
+                    <Route path="/policies" element={<PoliciesPage />} />
                     <Route path="/test" element={<TestPage />} />
                   </Route>
                 </Route>
