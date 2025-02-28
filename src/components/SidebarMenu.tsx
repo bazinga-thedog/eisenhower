@@ -3,10 +3,10 @@ import {
   AppItem,
   NavCategory,
   NavCategoryItem,
+  NavDivider,
   NavDrawer,
   NavDrawerBody,
   NavDrawerHeader,
-  NavSectionHeader,
   NavSubItem,
   NavSubItemGroup,
 } from '@fluentui/react-nav-preview'
@@ -23,6 +23,7 @@ import auth from '../hooks/useAuth'
 import Page from '../types/Page'
 import DynamicIcon from './DynamicIcon'
 import { useLocation } from 'react-router-dom'
+import { PagesContext } from '../context/PagesContext'
 
 const useStyles = makeStyles({
   root: {
@@ -43,6 +44,9 @@ const useStyles = makeStyles({
     marginLeft: '8px',
     flexDirection: 'column',
     gridRowGap: tokens.spacingVerticalS,
+  },
+  navbackground: {
+    backgroundColor: tokens.colorNeutralBackground1,
   },
 })
 
@@ -69,18 +73,29 @@ const SidebarMenu = (props: {
 
   const [pages, setPages] = useState([] as Page[])
   const [navIndex, setNavIndex] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [openItem, setopenItem] = useState<string[] | undefined>([])
 
   const location = useLocation()
 
   useEffect(() => {
     const fetchData = async () => {
       const pages = await getAllPages(accessToken)
-      const index =
-        pages
-          .map(x => x.children)[0]
-          .filter(p => location.pathname.includes(p.location))[0]?.order ?? 0
-      setNavIndex(index)
+      const currentPage = pages
+        .map(x => x.children)[0]
+        .filter(p => location.pathname.includes(p.location))[0]
+      if (currentPage) {
+        setNavIndex(currentPage.order)
+        setopenItem(
+          currentPage.parent > 0 ? [currentPage.parent.toString()] : undefined,
+        )
+      } else {
+        //Assure that if we are at the home page, all the menu is expandable/collapsable
+        setopenItem(undefined)
+      }
+
       setPages(pages)
+      setIsLoading(false)
     }
 
     // call the function
@@ -89,55 +104,72 @@ const SidebarMenu = (props: {
       .catch(console.error)
   }, [])
 
-  return (
-    <div className={styles.root}>
-      <NavDrawer
-        selectedValue={navIndex.toString()}
-        defaultSelectedCategoryValue=""
-        open={props.showSidebar}
-        type="inline"
-      >
-        <NavDrawerHeader></NavDrawerHeader>
-        <NavDrawerBody>
-          <AppItem
-            icon={<PersonCircle32Regular />}
-            as="a"
-            href={linkDestination}
-          >
-            {username}
-          </AppItem>
-          <NavSectionHeader>Administration</NavSectionHeader>
-          <NavCategory value="1">
-            {pages.map(page => {
-              return (
-                <div>
-                  <NavCategoryItem
-                    key={page.order.toString()}
-                    icon={<DynamicIcon tag={page.icon} />}
-                    value={page.order}
-                  >
-                    {page.name}
-                  </NavCategoryItem>
-                  <NavSubItemGroup>
-                    {page.children.map(p => {
-                      return (
-                        <NavSubItem
-                          href={p.location}
-                          value={p.order.toString()}
-                        >
-                          {p.name}
-                        </NavSubItem>
-                      )
-                    })}
-                  </NavSubItemGroup>
-                </div>
-              )
-            })}
-          </NavCategory>
-        </NavDrawerBody>
-      </NavDrawer>
-      <div className={styles.content}>{props.children}</div>
-    </div>
-  )
+  if (!isLoading) {
+    return (
+      <div className={styles.root}>
+        <NavDrawer
+          selectedValue={navIndex.toString()}
+          open={props.showSidebar}
+          type="inline"
+          openCategories={openItem}
+          color=""
+          className={styles.navbackground}
+        >
+          <NavDrawerHeader>
+            {' '}
+            <AppItem
+              icon={<PersonCircle32Regular />}
+              as="a"
+              href={linkDestination}
+              key="user"
+              className={styles.navbackground}
+            >
+              {username}
+            </AppItem>
+          </NavDrawerHeader>
+          <NavDivider />
+          <NavDrawerBody>
+            <NavCategory value="1">
+              {pages.map(page => {
+                return (
+                  <div>
+                    <NavCategoryItem
+                      key={page.parent + '_' + page.order.toString()}
+                      icon={<DynamicIcon tag={page.icon} />}
+                      value={page.order}
+                      className={styles.navbackground}
+                    >
+                      {page.name}
+                    </NavCategoryItem>
+                    <NavSubItemGroup>
+                      {page.children.map(p => {
+                        return (
+                          <NavSubItem
+                            href={p.location}
+                            value={p.order.toString()}
+                            key={p.parent + '_' + p.order.toString()}
+                            className={styles.navbackground}
+                          >
+                            {p.name}
+                          </NavSubItem>
+                        )
+                      })}
+                    </NavSubItemGroup>
+                  </div>
+                )
+              })}
+            </NavCategory>
+          </NavDrawerBody>
+        </NavDrawer>
+        <div className={styles.content}>
+          <PagesContext.Provider value={pages}>
+            {props.children}
+          </PagesContext.Provider>
+        </div>
+      </div>
+    )
+  } else {
+    return <div>Loading...</div>
+  }
 }
 export default SidebarMenu

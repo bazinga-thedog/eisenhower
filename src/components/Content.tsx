@@ -1,5 +1,12 @@
 import * as React from 'react'
 import SidebarMenu from './SidebarMenu'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  content: {
+    backgroundColor: tokens.colorNeutralBackground3,
+  },
+})
 
 export const Content = (props: {
   children:
@@ -14,7 +21,7 @@ export const Content = (props: {
   showSidebar: boolean
 }) => {
   return (
-    <div>
+    <div className={useStyles().content}>
       <SidebarMenu showSidebar={props.showSidebar}>
         {props.children}
       </SidebarMenu>
