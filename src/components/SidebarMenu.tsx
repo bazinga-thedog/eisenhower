@@ -34,7 +34,7 @@ const useStyles = makeStyles({
   content: {
     flex: '1',
     padding: '16px',
-    display: 'grid',
+    display: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
   },
@@ -51,15 +51,7 @@ const useStyles = makeStyles({
 })
 
 const SidebarMenu = (props: {
-  children:
-    | string
-    | number
-    | boolean
-    | React.ReactElement<any, string | React.JSXElementConstructor<any>>
-    | Iterable<React.ReactNode>
-    | React.ReactPortal
-    | null
-    | undefined
+  children: React.ReactNode
   showSidebar: boolean
 }) => {
   const navigate = useNavigate()
@@ -81,6 +73,7 @@ const SidebarMenu = (props: {
   const location = useLocation()
 
   useEffect(() => {
+    console.log('Loading pages...')
     const fetchData = async () => {
       const pages = await getAllPages(accessToken)
       const currentPage = pages
@@ -134,7 +127,7 @@ const SidebarMenu = (props: {
                 return (
                   <div>
                     <NavCategoryItem
-                      key={page.parent + '_' + page.order.toString()}
+                      key={page.parent + '_' + page.order}
                       icon={<DynamicIcon tag={page.icon} />}
                       value={page.order}
                       className={styles.navbackground}
@@ -147,7 +140,7 @@ const SidebarMenu = (props: {
                           <NavSubItem
                             onClick={() => navToPage('/' + p.location)}
                             value={p.order.toString()}
-                            key={p.parent + '_' + p.order.toString()}
+                            key={p.parent + '_' + p.order}
                             className={styles.navbackground}
                           >
                             {p.name}

@@ -5,6 +5,7 @@
   "dependencies": {
     "@fluentui/react-components": "^9.60.0",
     "@fluentui/react-icons": "^2.0.274",
+    "@fluentui/react-migration-v8-v9": "^9.7.0",
     "@fluentui/react-nav-preview": "^0.12.0",
     "@types/jest": "^27.5.2",
     "js-cookie": "^3.0.5",

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button, Input, Label } from '@fluentui/react-components'
+
 import Auth from '../types/Auth'
 import { authenticate } from '../services/AuthService'
 import useAuth from '../hooks/useAuth'
