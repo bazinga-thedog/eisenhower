@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react'
 import { Routes, Route, BrowserRouter } from 'react-router-dom'
 import { FluentProvider, webLightTheme } from '@fluentui/react-components'
+import './i18n/index'
 
 import LoginPage from './pages/LoginPage'
 import ContentPage from './pages/ContentPage'

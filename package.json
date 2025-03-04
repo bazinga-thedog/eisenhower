@@ -8,6 +8,8 @@
     "@fluentui/react-migration-v8-v9": "^9.7.0",
     "@fluentui/react-nav-preview": "^0.12.0",
     "@types/jest": "^27.5.2",
+    "i18next": "^23.7.7",
+    "i18next-browser-languagedetector": "^8.0.4",
     "js-cookie": "^3.0.5",
     "react": "^18",
     "react-dom": "^18",

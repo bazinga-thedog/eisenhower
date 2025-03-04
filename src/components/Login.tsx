@@ -7,6 +7,7 @@ import { authenticate } from '../services/AuthService'
 import useAuth from '../hooks/useAuth'
 
 import '../assets/style/Login.css'
+import { t } from 'i18next'
 
 const Login = () => {
   let { setAuth } = useAuth()
@@ -77,9 +78,9 @@ const Login = () => {
           handleSubmit(formData)
         }}
       >
-        <h2>Login</h2>
+        <h2>{t('login.title')}</h2>
         <div className="form-group">
-          <Label htmlFor="username">Username *</Label>
+          <Label htmlFor="username">{t('login.username') + ' *'}</Label>
           <Input
             type="text"
             id="username"
@@ -91,7 +92,7 @@ const Login = () => {
           />
         </div>
         <div className="form-group">
-          <Label htmlFor="password">Password *</Label>
+          <Label htmlFor="password">{t('login.password') + ' *'}</Label>
           <Input
             type="password"
             id="password"
@@ -109,7 +110,7 @@ const Login = () => {
             </p>
           )}
           <Button type="submit" appearance="primary" disabled={isSubmitting}>
-            {isSubmitting ? 'Loading...' : 'Login'}
+            {isSubmitting ? 'Loading...' : t('login.button')}
           </Button>
         </div>
       </form>
