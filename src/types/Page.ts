@@ -8,7 +8,7 @@ interface Page {
   children: Page[]
 }
 
-export interface PageStructure {
+export interface PageServiceStructure {
   id: number
   name: string
   location: string

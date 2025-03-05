@@ -11,6 +11,10 @@ const Format = {
     TextError: {
       color: tokens.colorPaletteRedBorder2,
     },
+    LinkPrimary: {
+      color: tokens.colorBrandForeground1,
+      textDecoration: 'none',
+    },
   },
 }
 

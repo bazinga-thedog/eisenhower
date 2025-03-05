@@ -1,5 +1,6 @@
 import { configs_servicebus } from '../configs/configs_servicebus'
-import Policy from '../types/Policy'
+import Policy, { PolicyStructure } from '../types/Policy'
+import { User } from '../types/User'
 
 export const getAllPolicies = async (
   accessToken: string,
@@ -15,9 +16,17 @@ export const getAllPolicies = async (
       credentials: 'include',
     },
   )
-  const policies: [Policy] = await response.json()
+  const policies: [PolicyStructure] = await response.json()
 
-  return policies
+  return policies.map(
+    x =>
+      ({
+        id: x.id,
+        name: x.name,
+        updatedon: new Date(x.updatedon),
+        updatedby: { name: x.user_name } as User,
+      }) as Policy,
+  )
 }
 
 const PolicyService = () => {}

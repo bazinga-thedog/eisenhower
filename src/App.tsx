@@ -33,6 +33,7 @@ export default function App() {
                   >
                     <Route path="/" element={<ContentPage />} />
                     <Route path="/policies" element={<PoliciesPage />} />
+                    <Route path="/policies/:id" element={<PoliciesPage />} />
                     <Route path="/test" element={<TestPage />} />
                   </Route>
                 </Route>

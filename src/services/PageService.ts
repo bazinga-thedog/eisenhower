@@ -1,9 +1,9 @@
 import { configs_servicebus } from '../configs/configs_servicebus'
-import Page, { PageStructure } from '../types/Page'
+import Page, { PageServiceStructure } from '../types/Page'
 
 const build = (
-  pages: PageStructure[],
-  allPages: PageStructure[],
+  pages: PageServiceStructure[],
+  allPages: PageServiceStructure[],
   parent: number,
 ): Page[] => {
   let newPages: Page[] = []
@@ -37,7 +37,7 @@ export const getAllPages = async (accessToken: string): Promise<Page[]> => {
       credentials: 'include',
     },
   )
-  const pages: [PageStructure] = await response.json()
+  const pages: [PageServiceStructure] = await response.json()
 
   const pagesList: Page[] = build(
     pages.filter(x => !x.parentid),
