@@ -1,5 +1,8 @@
 const Structure = {
   Structure: {
+    Flex: {
+      display: 'flex',
+    },
     ColumnWrapper: {
       display: 'flex',
       width: '100%',
@@ -12,6 +15,7 @@ const Structure = {
       flexDirection: 'row' as 'row',
       display: 'flex',
       gap: '10px',
+      flex: 1,
     },
     Column6: {
       flex: '0 0 calc(50% - 5px)',
@@ -21,6 +25,12 @@ const Structure = {
     },
     AlignRight: {
       textAlign: 'right' as 'right',
+    },
+    AlignSelfVerticalCenter: {
+      alignSelf: 'center',
+    },
+    AlignSelfVerticalBottom: {
+      alignSelf: 'flex-end',
     },
   },
 }

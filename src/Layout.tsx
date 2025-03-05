@@ -4,7 +4,7 @@ import NavBar from './components/NavBar'
 
 const Layout = () => {
   return (
-    <div>
+    <div className="App">
       <div className="header">
         <NavBar />
       </div>

@@ -7,12 +7,19 @@ import {
   CardPreview,
   SearchBox,
   Subtitle1,
+  Tooltip,
   makeStyles,
   mergeClasses,
-  typographyStyles,
 } from '@fluentui/react-components'
-import { ArrowReplyRegular, ShareRegular } from '@fluentui/react-icons'
+import {
+  ArrowReplyRegular,
+  InfoFilled,
+  ShareRegular,
+} from '@fluentui/react-icons'
 import Structure from '../styles/structure'
+import { t } from 'i18next'
+import Spacing from '../styles/spacing'
+import Format from '../styles/format'
 
 const useStyles = makeStyles({
   card: {
@@ -22,8 +29,14 @@ const useStyles = makeStyles({
   cardfull: {
     width: '100%',
   },
-  h1: typographyStyles.subtitle1,
+  searchbig: {
+    width: '537px',
+    maxWidth: '537px',
+  },
+  ...Spacing.Spacing,
   ...Structure.Structure,
+  ...Format.Format,
+  tweakIcon: { paddingTop: '5px' },
 })
 const Section = () => {
   const styles = useStyles()
@@ -34,22 +47,60 @@ const Section = () => {
         header={
           <div className={styles.LayoutColumns}>
             <div className={styles.Column6}>
-              <Subtitle1>Policies</Subtitle1>
+              <div className={styles.Flex}>
+                <Subtitle1>Policies</Subtitle1>
+                <span
+                  className={mergeClasses(
+                    styles.MarginLeftBase,
+                    styles.TextNote,
+                    styles.AlignSelfVerticalCenter,
+                  )}
+                >
+                  |
+                </span>
+                <Tooltip
+                  content={t('policies.info_content')}
+                  positioning="above-start"
+                  withArrow
+                  relationship="label"
+                  appearance="inverted"
+                >
+                  <span
+                    className={mergeClasses(
+                      styles.MarginLeftBase,
+                      styles.AlignSelfVerticalCenter,
+                      styles.TextPrimary,
+                      styles.tweakIcon,
+                    )}
+                  >
+                    <InfoFilled />
+                  </span>
+                </Tooltip>
+                <span
+                  className={mergeClasses(
+                    styles.MarginLeftSmall,
+                    styles.TextPrimary,
+                    styles.AlignSelfVerticalCenter,
+                  )}
+                >
+                  {t('general.info')}
+                </span>
+              </div>
+              <div className={mergeClasses(styles.FullWidth, styles.TextNote)}>
+                <Caption1>{t('policies.description')}</Caption1>
+              </div>
+              <div
+                className={mergeClasses(styles.FullWidth, styles.MarginTopBase)}
+              >
+                <SearchBox
+                  placeholder="Search"
+                  size="medium"
+                  className={styles.searchbig}
+                />
+              </div>
             </div>
             <div className={mergeClasses(styles.Column6, styles.AlignRight)}>
               <Button appearance="primary">Create policy</Button>
-            </div>
-          </div>
-        }
-        description={
-          <div className={styles.cardfull}>
-            <div className={styles.cardfull}>
-              <Caption1>
-                Configure the necessary policies to assign to specific roles
-              </Caption1>
-              <div className={styles.cardfull}>
-                <SearchBox placeholder="Search" />
-              </div>
             </div>
           </div>
         }

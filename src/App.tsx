@@ -16,9 +16,9 @@ import PoliciesPage from './pages/PoliciesPage'
 
 export default function App() {
   return (
-    <FluentProvider theme={webLightTheme} className="App">
-      <BrowserRouter>
-        <AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <FluentProvider theme={webLightTheme}>
           <Suspense fallback={<div>Suspense Loading...</div>}>
             <Routes>
               <Route path="/" element={<Layout />}>
@@ -39,8 +39,8 @@ export default function App() {
               </Route>
             </Routes>
           </Suspense>
-        </AuthProvider>
-      </BrowserRouter>
-    </FluentProvider>
+        </FluentProvider>
+      </AuthProvider>
+    </BrowserRouter>
   )
 }

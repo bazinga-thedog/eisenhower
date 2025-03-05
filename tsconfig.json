@@ -34,5 +34,5 @@
     "jest",
     "src/setupTests.ts"
   ],
-  "include": ["src"]
+  "include": ["src", "src/styles/.ts"]
 }
