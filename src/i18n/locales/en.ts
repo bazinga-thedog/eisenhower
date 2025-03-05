@@ -8,6 +8,9 @@ const enTranslations = {
       username: 'Username',
       password: 'Password',
       button: 'Login',
+      loading: 'Loading...',
+      username_ph: 'Enter your username',
+      password_ph: 'Enter your password',
     },
     policies: {
       description:

@@ -73,7 +73,6 @@ const SidebarMenu = (props: {
   const location = useLocation()
 
   useEffect(() => {
-    console.log('Loading pages...')
     const fetchData = async () => {
       const pages = await getAllPages(accessToken)
       const currentPage = pages

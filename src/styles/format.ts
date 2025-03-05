@@ -8,6 +8,9 @@ const Format = {
     TextPrimary: {
       color: tokens.colorBrandForeground1,
     },
+    TextError: {
+      color: tokens.colorPaletteRedBorder2,
+    },
   },
 }
 

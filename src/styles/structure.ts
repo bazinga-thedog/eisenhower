@@ -3,6 +3,14 @@ const Structure = {
     Flex: {
       display: 'flex',
     },
+    FlexToCenterMiddle: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    HeightFullContent: {
+      height: 'calc(100vh - 112px)',
+    },
     ColumnWrapper: {
       display: 'flex',
       width: '100%',
@@ -23,6 +31,9 @@ const Structure = {
     Column3: {
       flex: '0 0 calc(25% - 10px)',
     },
+    AlignLeft: {
+      textAlign: 'left' as 'left',
+    },
     AlignRight: {
       textAlign: 'right' as 'right',
     },
@@ -31,6 +42,12 @@ const Structure = {
     },
     AlignSelfVerticalBottom: {
       alignSelf: 'flex-end',
+    },
+    FifthScreenWidth: {
+      width: 'calc(100vw / 5)',
+    },
+    FormControlsFullWidth: {
+      width: '100%',
     },
   },
 }
