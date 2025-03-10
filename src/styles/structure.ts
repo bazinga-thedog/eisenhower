@@ -13,7 +13,6 @@ const Structure = {
     },
     ColumnWrapper: {
       display: 'flex',
-      width: '100%',
       flexWrap: 'wrap' as 'wrap',
     },
     FullWidth: {
@@ -31,8 +30,15 @@ const Structure = {
     Column3: {
       flex: '0 0 calc(25% - 10px)',
     },
+    ScrollableContent: {
+      overflowY: 'auto' as 'auto',
+      height: 'calc(100vh - 170px)',
+    },
     AlignLeft: {
       textAlign: 'left' as 'left',
+    },
+    AlignCenter: {
+      textAlign: 'center' as 'center',
     },
     AlignRight: {
       textAlign: 'right' as 'right',

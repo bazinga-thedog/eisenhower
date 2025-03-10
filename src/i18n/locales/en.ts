@@ -18,6 +18,8 @@ const enTranslations = {
       info_content:
         'Manage available policies. Each policy will have a set of permissions, when you assign a policy to a user, that user will have those permissions in the application.',
       create: 'Create policy',
+      updatedon: 'Last updated on',
+      updatedby: 'Last updated by',
     },
   },
 }

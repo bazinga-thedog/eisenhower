@@ -1,5 +1,9 @@
 import { configs_servicebus } from '../configs/configs_servicebus'
-import Policy, { PolicyStructure } from '../types/Policy'
+import Permission from '../types/Permission'
+import Policy, {
+  PolicyPermissionStructure,
+  PolicyStructure,
+} from '../types/Policy'
 import { User } from '../types/User'
 
 export const getAllPolicies = async (
@@ -27,6 +31,43 @@ export const getAllPolicies = async (
         updatedby: { name: x.user_name } as User,
       }) as Policy,
   )
+}
+
+export const getPolicy = async (
+  accessToken: string,
+  id: string,
+): Promise<Policy> => {
+  const response: Response = await fetch(
+    configs_servicebus.HOST + '/api/policies/' + id,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + accessToken,
+      },
+      credentials: 'include',
+    },
+  )
+  const permissions: [PolicyPermissionStructure] = await response.json()
+
+  let policy: Policy = {
+    id: permissions[0].id,
+    name: permissions[0].name,
+    description: permissions[0].description,
+    updatedby: { name: permissions[0].user_name } as User,
+    updatedon: new Date(permissions[0].updatedon),
+    permissions: permissions.map(
+      x =>
+        ({
+          id: x.id,
+          resourceid: x.resourceid,
+          operation: x.operation,
+          asset: x.asset,
+        }) as Permission,
+    ),
+  }
+
+  return policy
 }
 
 const PolicyService = () => {}

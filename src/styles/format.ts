@@ -5,6 +5,7 @@ const Format = {
     TextNote: {
       color: tokens.colorNeutralForeground3,
     },
+
     TextPrimary: {
       color: tokens.colorBrandForeground1,
     },
@@ -13,7 +14,16 @@ const Format = {
     },
     LinkPrimary: {
       color: tokens.colorBrandForeground1,
+      ':hover': {
+        color: tokens.colorBrandForeground2Hover,
+      },
       textDecoration: 'none',
+    },
+    TextSmall: {
+      fontSize: tokens.fontSizeBase200,
+    },
+    Label: {
+      fontSize: tokens.fontSizeBase300,
     },
   },
 }

@@ -2,6 +2,9 @@ import { tokens } from '@fluentui/react-components'
 
 const Spacing = {
   Spacing: {
+    MarginBase: {
+      margin: tokens.spacingVerticalS,
+    },
     MarginTopLarge: {
       marginTop: tokens.spacingVerticalXL,
     },

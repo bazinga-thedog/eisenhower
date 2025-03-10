@@ -13,6 +13,8 @@ import { AuthProvider } from './context/AuthProvider'
 import PersistLogin from './components/PersistLogin'
 import TestPage from './pages/TestPage'
 import PoliciesPage from './pages/PoliciesPage'
+import PolicyDetailsPage from './pages/PolicyDetailsPage'
+import PolicyEditPage from './pages/PolicyEditPage'
 
 export default function App() {
   return (
@@ -33,7 +35,14 @@ export default function App() {
                   >
                     <Route path="/" element={<ContentPage />} />
                     <Route path="/policies" element={<PoliciesPage />} />
-                    <Route path="/policies/:id" element={<PoliciesPage />} />
+                    <Route
+                      path="/policies/:id"
+                      element={<PolicyDetailsPage />}
+                    />
+                    <Route
+                      path="/policies/edit/:id"
+                      element={<PolicyEditPage />}
+                    />
                     <Route path="/test" element={<TestPage />} />
                   </Route>
                 </Route>
