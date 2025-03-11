@@ -60,7 +60,7 @@ export const getPolicy = async (
       x =>
         ({
           id: x.id,
-          resourceid: x.resourceid,
+          resourceid: [x.resourceid],
           operation: x.operation,
           asset: x.asset,
         }) as Permission,

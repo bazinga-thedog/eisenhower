@@ -21,6 +21,9 @@ const Format = {
     },
     TextSmall: {
       fontSize: tokens.fontSizeBase200,
+      '& label': {
+        fontSize: tokens.fontSizeBase200,
+      },
     },
     Label: {
       fontSize: tokens.fontSizeBase300,

@@ -96,15 +96,14 @@ const PolicyDetails = () => {
     createTableColumn<Permission>({
       columnId: 'resource',
       compare: (a, b) => {
-        return a.resourceid - b.resourceid
+        return a.resourceid[0] - b.resourceid[0]
       },
       renderHeaderCell: () => {
         return 'Resource ###'
       },
 
       renderCell: item => {
-        console.log(item.resourceid)
-        return item.resourceid == -1 ? '*' : '...todo'
+        return item.resourceid[0] == -1 ? '*' : '...todo'
       },
     }),
   ]

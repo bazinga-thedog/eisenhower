@@ -1,6 +1,6 @@
 interface Permission {
   id: number
-  resourceid: number
+  resourceid: number[]
   operation: string
   asset: string
 }

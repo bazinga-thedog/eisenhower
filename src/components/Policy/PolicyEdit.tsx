@@ -27,6 +27,21 @@ import {
   Tooltip,
   Option,
   Button,
+  RadioGroup,
+  Radio,
+  CounterBadge,
+  Dialog,
+  DialogTrigger,
+  DialogSurface,
+  DialogBody,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TableSelectionCell,
+  SearchBox,
+  SearchBoxChangeEvent,
+  InputOnChangeData,
+  CheckboxOnChangeData,
 } from '@fluentui/react-components'
 import { useEffect, useState } from 'react'
 import { t } from 'i18next'
@@ -38,8 +53,10 @@ import Breadcrumbs from '../Breadcrumbs'
 import Format from '../../styles/format'
 import Spacing from '../../styles/spacing'
 import Permission from '../../types/Permission'
-import { InfoFilled } from '@fluentui/react-icons'
+import { InfoFilled, MoreHorizontalFilled } from '@fluentui/react-icons'
 import { configs_permission_operation } from '../../configs/configs_permission_operation'
+import Lookup from '../../types/Lookup'
+import { getLookup } from '../../services/LookupService'
 
 const useStyles = makeStyles({
   ...Structure.Structure,
@@ -49,28 +66,38 @@ const useStyles = makeStyles({
   tweakCombo: { minWidth: '0', '& input': { width: '100%' } },
 })
 
+let allLookup: Lookup[] = []
+
 const PolicyEdit = () => {
   const { id } = useParams()
   const isNew = !parseInt(id || '0')
-  const [policy, setPolicy] = useState({} as Policy)
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingLookup, setIsLoadingLookup] = useState(true)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [lookupResource, setLookupResource] = useState('')
   const [permissionList, SetPermissionList] = useState([] as Permission[])
+  const [lookupList, setLookupList] = useState([] as Lookup[])
+  const [selectedIds, setSelectedIds] = useState(new Set<number>())
+  const [selection, setSelection] = useState(false as 'mixed' | boolean)
+  const [selectedRowId, SetSelectedRowId] = useState(0)
 
   const styles = useStyles()
 
   const accessToken = auth().accessToken
 
-  const [formData, setFormData] = useState({} as Policy)
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+  } as Policy)
 
   useEffect(() => {
     const fetchData = async () => {
       if (!isNew) {
         const policy = await getPolicy(accessToken, id || '0')
-        setPolicy(policy)
         setFormData(policy)
         SetPermissionList(policy.permissions)
       } else {
-        policy.permissions = []
+        formData.permissions = []
       }
       setIsLoading(false)
     }
@@ -78,9 +105,64 @@ const PolicyEdit = () => {
     fetchData().catch(console.error)
   }, [])
 
+  const getLookupData = async (asset: string) => {
+    allLookup = await getLookup(accessToken, asset)
+    setLookupList(allLookup)
+    setIsLoadingLookup(false)
+  }
+
   const addNewPermission = () => {
-    permissionList.push({} as Permission)
+    permissionList.push({
+      id:
+        -1 *
+        (permissionList.reduce(
+          (max, item) => (Math.abs(item.id) > max ? Math.abs(item.id) : max),
+          0,
+        ) +
+          1),
+      asset: '',
+      operation: '',
+      resourceid: [-1],
+    } as Permission)
     SetPermissionList([...permissionList])
+  }
+
+  const showResources = (
+    rowId: number,
+    asset: string,
+    permissions: number[],
+  ) => {
+    setIsLoadingLookup(true)
+    setSelectedIds(new Set(permissions.filter(x => x !== 0)))
+    SetSelectedRowId(rowId)
+    setLookupResource(asset)
+    getLookupData(asset).then(() => setDialogOpen(true))
+  }
+
+  const onAssetOptionSelect = (ev: any, data: any, id: number) => {
+    SetPermissionList(
+      permissionList.map(p =>
+        p.id === id ? { ...p, asset: data.optionValue } : p,
+      ),
+    )
+  }
+
+  const onOperationOptionSelect = (ev: any, data: any, id: number) => {
+    SetPermissionList(
+      permissionList.map(p =>
+        p.id === id ? { ...p, operation: data.optionValue } : p,
+      ),
+    )
+  }
+
+  const onResourceChange = (ev: any, data: any, id: number) => {
+    SetPermissionList(
+      permissionList.map(p =>
+        p.id === id
+          ? { ...p, resourceid: data.value === 'all' ? [-1] : [0] }
+          : p,
+      ),
+    )
   }
 
   const columns: TableColumnDefinition<Permission>[] = [
@@ -96,10 +178,17 @@ const PolicyEdit = () => {
         return (
           <TableCellLayout>
             <Combobox
+              size="small"
               placeholder="Select an asset ###"
               className={styles.tweakCombo}
+              clearable
+              value={item.asset}
+              onOptionSelect={(ev, data) =>
+                onAssetOptionSelect(ev, data, item.id)
+              }
             >
               {configs_permission_assets.map(value => {
+                console.log()
                 return <Option key={value}>{value}</Option>
               })}
             </Combobox>
@@ -118,7 +207,15 @@ const PolicyEdit = () => {
       renderCell: item => {
         return (
           <TableCellLayout>
-            <Combobox placeholder="Operation ###" className={styles.tweakCombo}>
+            <Combobox
+              size="small"
+              placeholder="Select operation ###"
+              className={styles.tweakCombo}
+              value={item.operation}
+              onOptionSelect={(ev, data) =>
+                onOperationOptionSelect(ev, data, item.id)
+              }
+            >
               {configs_permission_operation.map(value => {
                 return <Option key={value}>{value}</Option>
               })}
@@ -130,7 +227,7 @@ const PolicyEdit = () => {
     createTableColumn<Permission>({
       columnId: 'resource',
       compare: (a, b) => {
-        return a.resourceid - b.resourceid
+        return a.resourceid[0] - b.resourceid[0]
       },
       renderHeaderCell: () => {
         return 'Resource###'
@@ -138,13 +235,119 @@ const PolicyEdit = () => {
       renderCell: item => {
         return (
           <TableCellLayout>
-            <div>{'Content ad adas dasd'}</div>
+            <div className={styles.Flex}>
+              <RadioGroup
+                layout="horizontal"
+                value={item.resourceid[0] == -1 ? 'all' : 'restricted'}
+                onChange={(ev, data) => onResourceChange(ev, data, item.id)}
+              >
+                <Radio value="all" label="All" className={styles.TextSmall} />
+                <Radio
+                  value="restricted"
+                  label="Restricted"
+                  className={styles.TextSmall}
+                />
+              </RadioGroup>
+              {item.resourceid[0] > -1 && (
+                <Button
+                  size="small"
+                  iconPosition="after"
+                  className={styles.SelfAlign}
+                  icon={<MoreHorizontalFilled />}
+                  onClick={() =>
+                    showResources(item.id, item.asset, item.resourceid)
+                  }
+                  disabled={item.asset === ''}
+                >
+                  {item.resourceid[0] > 0 && (
+                    <CounterBadge
+                      size="small"
+                      appearance="filled"
+                      color="brand"
+                      count={item.resourceid.length}
+                    />
+                  )}
+                </Button>
+              )}
+            </div>
           </TableCellLayout>
         )
       },
     }),
   ]
 
+  const handleRowSelect = ({
+    rowId,
+    selected,
+  }: {
+    rowId: number
+    selected: boolean
+  }) => {
+    setSelectedIds(prevSelected => {
+      const newSelected = new Set(prevSelected)
+      selected ? newSelected.add(rowId) : newSelected.delete(rowId)
+      setSelection(
+        newSelected.size > 0
+          ? newSelected.size === allLookup.length
+            ? true
+            : 'mixed'
+          : false,
+      )
+      return newSelected
+    })
+  }
+
+  const handleFullCheckChange = (data: CheckboxOnChangeData) => {
+    if (!data.checked) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(lookupList.map(x => x.id)))
+    }
+    setSelection(
+      data.checked
+        ? lookupList.length === allLookup.length
+          ? true
+          : 'mixed'
+        : false,
+    )
+  }
+
+  const lookupColumns: TableColumnDefinition<Lookup>[] = [
+    createTableColumn({
+      columnId: 'selection',
+      renderHeaderCell: () => (
+        <TableSelectionCell
+          onChange={e => {
+            handleFullCheckChange(e.target as HTMLInputElement)
+          }}
+          checked={selection}
+        />
+      ),
+      renderCell: row => (
+        <TableSelectionCell
+          checked={selectedIds.has(row.id)}
+          onChange={e =>
+            handleRowSelect({
+              rowId: row.id,
+              selected: (e.target as HTMLInputElement).checked,
+            })
+          }
+        />
+      ),
+    }),
+    createTableColumn<Lookup>({
+      columnId: 'title',
+      compare: (a, b) => {
+        return a.title.localeCompare(b.title)
+      },
+      renderHeaderCell: () => {
+        return 'Title###'
+      },
+      renderCell: item => {
+        return <TableCellLayout>{item.title}</TableCellLayout>
+      },
+    }),
+  ]
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     length?: number,
@@ -162,11 +365,38 @@ const PolicyEdit = () => {
     }*/
   }
 
+  const onSearchChange: (
+    ev: SearchBoxChangeEvent,
+    data: InputOnChangeData,
+  ) => void = (_, data) => {
+    setLookupList(
+      allLookup.filter(x =>
+        x.title.toLowerCase().includes(data.value.toLowerCase()),
+      ),
+    )
+  }
+
+  const onPermissionsSelected = () => {
+    setSelectedIds(new Set())
+    setSelection(false)
+
+    const selectedPermission = permissionList.find(p => p.id === selectedRowId)
+    if (selectedPermission) {
+      selectedPermission.resourceid.splice(
+        0,
+        selectedPermission.resourceid.length,
+      )
+      selectedIds.forEach(x => selectedPermission.resourceid.push(x))
+    }
+
+    setDialogOpen(false)
+  }
+
   return (
     <div className={styles.FullWidth}>
       <div className={styles.ColumnWrapper}>
         <div className={styles.FullWidth}>
-          <Breadcrumbs current={isNew ? 'create###' : policy.name} />
+          <Breadcrumbs current={isNew ? 'create###' : formData.name} />
         </div>
         <div
           className={mergeClasses(
@@ -332,6 +562,12 @@ const PolicyEdit = () => {
                               sortable
                               getRowId={item => item.id}
                               focusMode="composite"
+                              size="extra-small"
+                              columnSizingOptions={{
+                                resource: { idealWidth: 200 },
+                              }}
+                              resizableColumnsOptions={{ autoFitColumns: true }}
+                              resizableColumns={true}
                             >
                               <DataGridHeader>
                                 <DataGridRow>
@@ -400,6 +636,75 @@ const PolicyEdit = () => {
           </div>
         </div>
       </div>
+      <Dialog open={dialogOpen}>
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>{'Select available### ' + lookupResource}</DialogTitle>
+            <DialogContent>
+              {!isLoadingLookup && (
+                <div>
+                  <SearchBox
+                    placeholder="Search###"
+                    size="medium"
+                    onChange={onSearchChange}
+                  ></SearchBox>
+                  <DataGrid
+                    columnSizingOptions={{
+                      selection: { idealWidth: 30 },
+                    }}
+                    items={lookupList}
+                    columns={lookupColumns}
+                    sortable
+                    getRowId={item => item.id}
+                    focusMode="composite"
+                    size="extra-small"
+                    resizableColumnsOptions={{ autoFitColumns: true }}
+                    resizableColumns={true}
+                  >
+                    <DataGridHeader>
+                      <DataGridRow>
+                        {({ renderHeaderCell }) => (
+                          <DataGridHeaderCell>
+                            {renderHeaderCell()}
+                          </DataGridHeaderCell>
+                        )}
+                      </DataGridRow>
+                    </DataGridHeader>
+                    <DataGridBody<Lookup>>
+                      {({ item, rowId }) => (
+                        <DataGridRow<Lookup> key={rowId}>
+                          {({ renderCell }) => (
+                            <DataGridCell>{renderCell(item)}</DataGridCell>
+                          )}
+                        </DataGridRow>
+                      )}
+                    </DataGridBody>
+                  </DataGrid>
+                </div>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <DialogTrigger disableButtonEnhancement>
+                <Button
+                  appearance="secondary"
+                  onClick={() => {
+                    setDialogOpen(false)
+                  }}
+                >
+                  Close###
+                </Button>
+              </DialogTrigger>
+              <Button
+                appearance="primary"
+                onClick={onPermissionsSelected}
+                disabled={selectedIds.size === 0}
+              >
+                Done###
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
     </div>
   )
 }

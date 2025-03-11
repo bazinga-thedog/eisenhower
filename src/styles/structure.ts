@@ -24,6 +24,9 @@ const Structure = {
       gap: '10px',
       flex: 1,
     },
+    Column8: {
+      flex: '0 0 calc(66% - 5px)',
+    },
     Column6: {
       flex: '0 0 calc(50% - 5px)',
     },
@@ -54,6 +57,9 @@ const Structure = {
     },
     FormControlsFullWidth: {
       width: '100%',
+    },
+    SelfAlign: {
+      alignSelf: 'center',
     },
   },
 }
