@@ -48,7 +48,10 @@ export const getPolicy = async (
       credentials: 'include',
     },
   )
-  const permissions: [PolicyPermissionStructure] = await response.json()
+  const permissions: PolicyPermissionStructure[] = await response.json()
+  if (permissions.length === 0) {
+    return {} as Policy
+  }
 
   let policy: Policy = {
     id: permissions[0].id,
@@ -56,18 +59,93 @@ export const getPolicy = async (
     description: permissions[0].description,
     updatedby: { name: permissions[0].user_name } as User,
     updatedon: new Date(permissions[0].updatedon),
-    permissions: permissions.map(
-      x =>
-        ({
-          id: x.id,
-          resourceid: [x.resourceid],
-          operation: x.operation,
-          asset: x.asset,
-        }) as Permission,
-    ),
+    permissions: [] as Permission[],
   }
 
+  permissions.forEach(x => {
+    if (
+      policy.permissions.find(y => {
+        return y.asset === x.asset && y.operation === x.operation
+      })
+    ) {
+      policy.permissions
+        .find(y => {
+          return y.asset === x.asset && y.operation === x.operation
+        })
+        ?.resourceid.push(x.resourceid)
+    } else {
+      policy.permissions.push({
+        id: x.id,
+        asset: x.asset,
+        operation: x.operation,
+        resourceid: [x.resourceid],
+      } as Permission)
+    }
+  })
+
   return policy
+}
+
+export const createPolicy = async (
+  policy: Policy,
+  accessToken: string,
+): Promise<{ success: boolean; message: string }> => {
+  const response: Response = await fetch(
+    configs_servicebus.HOST + '/api/policies',
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + accessToken,
+      },
+      body: JSON.stringify(policy),
+      credentials: 'include',
+    },
+  )
+
+  const result = await response.json()
+  return { success: response.ok, message: result.message }
+}
+
+export const updatePolicy = async (
+  policy: Policy,
+  accessToken: string,
+): Promise<{ success: boolean; message: string }> => {
+  const response: Response = await fetch(
+    configs_servicebus.HOST + '/api/policies',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + accessToken,
+      },
+      body: JSON.stringify(policy),
+      credentials: 'include',
+    },
+  )
+
+  const result = await response.json()
+  return { success: response.ok, message: result.message }
+}
+
+export const deletePolicy = async (
+  id: number,
+  accessToken: string,
+): Promise<{ success: boolean; message: string }> => {
+  const response: Response = await fetch(
+    configs_servicebus.HOST + '/api/policies/' + id,
+    {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + accessToken,
+      },
+      credentials: 'include',
+    },
+  )
+
+  const result = await response.json()
+  return { success: response.ok, message: result.message }
 }
 
 const PolicyService = () => {}

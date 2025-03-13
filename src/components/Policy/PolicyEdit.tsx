@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import Structure from '../../styles/structure'
 import {
   Caption1,
@@ -45,23 +45,35 @@ import {
 } from '@fluentui/react-components'
 import { useEffect, useState } from 'react'
 import { t } from 'i18next'
-import { getPolicy } from '../../services/PolicyService'
+import {
+  createPolicy,
+  getPolicy,
+  updatePolicy,
+} from '../../services/PolicyService'
 import auth from '../../hooks/useAuth'
 import { configs_permission_assets } from '../../configs/configs_permission_assets'
 import Policy from '../../types/Policy'
 import Breadcrumbs from '../Breadcrumbs'
 import Format from '../../styles/format'
 import Spacing from '../../styles/spacing'
+import PaginationStyle from '../../styles/pagination'
 import Permission from '../../types/Permission'
-import { InfoFilled, MoreHorizontalFilled } from '@fluentui/react-icons'
+import {
+  DeleteRegular,
+  InfoFilled,
+  MoreHorizontalFilled,
+} from '@fluentui/react-icons'
 import { configs_permission_operation } from '../../configs/configs_permission_operation'
 import Lookup from '../../types/Lookup'
 import { getLookup } from '../../services/LookupService'
+import { useMessage } from '../../context/MessageProvider'
+import Pagination from 'react-js-pagination'
 
 const useStyles = makeStyles({
   ...Structure.Structure,
   ...Format.Format,
   ...Spacing.Spacing,
+  ...PaginationStyle.Pagination,
   tweakIcon: { paddingTop: '5px' },
   tweakCombo: { minWidth: '0', '& input': { width: '100%' } },
 })
@@ -79,11 +91,23 @@ const PolicyEdit = () => {
   const [lookupList, setLookupList] = useState([] as Lookup[])
   const [selectedIds, setSelectedIds] = useState(new Set<number>())
   const [selection, setSelection] = useState(false as 'mixed' | boolean)
-  const [selectedRowId, SetSelectedRowId] = useState(0)
+  const [selectedRowId, setSelectedRowId] = useState(0)
+  const [error, setError] = useState('')
+  const [activePage, setActivePage] = useState(1)
+  const [searchText, setSearchText] = useState('')
+  const [lookupCount, setLookupCount] = useState(0)
+
+  const PAGE_SIZE = 5
 
   const styles = useStyles()
 
   const accessToken = auth().accessToken
+  const { showMessage } = useMessage()
+  const navigate = useNavigate()
+
+  const navToPage = (url: string) => {
+    navigate(url)
+  }
 
   const [formData, setFormData] = useState({
     name: '',
@@ -94,6 +118,10 @@ const PolicyEdit = () => {
     const fetchData = async () => {
       if (!isNew) {
         const policy = await getPolicy(accessToken, id || '0')
+        if (!policy.id) {
+          navigate('/policies', { replace: true })
+          return
+        }
         setFormData(policy)
         SetPermissionList(policy.permissions)
       } else {
@@ -105,9 +133,14 @@ const PolicyEdit = () => {
     fetchData().catch(console.error)
   }, [])
 
+  const clearError = () => {
+    setError('')
+  }
+
   const getLookupData = async (asset: string) => {
     allLookup = await getLookup(accessToken, asset)
-    setLookupList(allLookup)
+    setLookupList(allLookup.slice(0, PAGE_SIZE))
+    setLookupCount(allLookup.length)
     setIsLoadingLookup(false)
   }
 
@@ -125,6 +158,7 @@ const PolicyEdit = () => {
       resourceid: [-1],
     } as Permission)
     SetPermissionList([...permissionList])
+    clearError()
   }
 
   const showResources = (
@@ -132,22 +166,26 @@ const PolicyEdit = () => {
     asset: string,
     permissions: number[],
   ) => {
+    clearError()
     setIsLoadingLookup(true)
     setSelectedIds(new Set(permissions.filter(x => x !== 0)))
-    SetSelectedRowId(rowId)
+    setSelectedRowId(rowId)
     setLookupResource(asset)
+    setActivePage(1)
     getLookupData(asset).then(() => setDialogOpen(true))
   }
 
   const onAssetOptionSelect = (ev: any, data: any, id: number) => {
+    clearError()
     SetPermissionList(
       permissionList.map(p =>
-        p.id === id ? { ...p, asset: data.optionValue } : p,
+        p.id === id ? { ...p, asset: data.optionValue, resourceid: [-1] } : p,
       ),
     )
   }
 
   const onOperationOptionSelect = (ev: any, data: any, id: number) => {
+    clearError()
     SetPermissionList(
       permissionList.map(p =>
         p.id === id ? { ...p, operation: data.optionValue } : p,
@@ -156,6 +194,7 @@ const PolicyEdit = () => {
   }
 
   const onResourceChange = (ev: any, data: any, id: number) => {
+    clearError()
     SetPermissionList(
       permissionList.map(p =>
         p.id === id
@@ -252,7 +291,7 @@ const PolicyEdit = () => {
                 <Button
                   size="small"
                   iconPosition="after"
-                  className={styles.SelfAlign}
+                  className={mergeClasses(styles.SelfAlign)}
                   icon={<MoreHorizontalFilled />}
                   onClick={() =>
                     showResources(item.id, item.asset, item.resourceid)
@@ -269,6 +308,16 @@ const PolicyEdit = () => {
                   )}
                 </Button>
               )}
+              <Button
+                size="small"
+                iconPosition="after"
+                className={mergeClasses(
+                  styles.SelfAlign,
+                  styles.MarginLeftSmall,
+                )}
+                onClick={() => removePermission(item.id)}
+                icon={<DeleteRegular />}
+              ></Button>
             </div>
           </TableCellLayout>
         )
@@ -298,14 +347,16 @@ const PolicyEdit = () => {
   }
 
   const handleFullCheckChange = (data: CheckboxOnChangeData) => {
+    let newSelection = []
     if (!data.checked) {
       setSelectedIds(new Set())
     } else {
-      setSelectedIds(new Set(lookupList.map(x => x.id)))
+      newSelection = [...selectedIds, ...lookupList.map(x => x.id)]
+      setSelectedIds(new Set(newSelection))
     }
     setSelection(
       data.checked
-        ? lookupList.length === allLookup.length
+        ? newSelection.length === allLookup.length
           ? true
           : 'mixed'
         : false,
@@ -348,6 +399,7 @@ const PolicyEdit = () => {
       },
     }),
   ]
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     length?: number,
@@ -369,14 +421,19 @@ const PolicyEdit = () => {
     ev: SearchBoxChangeEvent,
     data: InputOnChangeData,
   ) => void = (_, data) => {
-    setLookupList(
-      allLookup.filter(x =>
-        x.title.toLowerCase().includes(data.value.toLowerCase()),
-      ),
+    setActivePage(1)
+    setSearchText(data.value)
+    let newLookupList = allLookup.filter(
+      x =>
+        !data.value || x.title.toLowerCase().includes(data.value.toLowerCase()),
     )
+    setLookupCount(newLookupList.length)
+    newLookupList = newLookupList.slice(0, PAGE_SIZE)
+    setLookupList(newLookupList)
   }
 
   const onPermissionsSelected = () => {
+    setSearchText('')
     setSelectedIds(new Set())
     setSelection(false)
 
@@ -390,6 +447,55 @@ const PolicyEdit = () => {
     }
 
     setDialogOpen(false)
+  }
+
+  const removePermission = (id: number) => {
+    clearError()
+    SetPermissionList(permissionList.filter(item => item.id !== id))
+  }
+
+  const savePolicy = async (e: any) => {
+    const policy = {
+      id: isNew ? 0 : parseInt(id || '0'),
+      name: formData.name,
+      description: formData.description,
+      permissions: permissionList,
+    } as Policy
+
+    e.preventDefault()
+    const result = isNew
+      ? await createPolicy(policy, accessToken)
+      : await updatePolicy(policy, accessToken)
+    if (result.success) {
+      showMessage(
+        'Policy ' +
+          policy.name +
+          ' has been successfully ' +
+          (isNew ? 'created' : 'updated') +
+          '###',
+        '',
+        'success',
+        2000,
+      )
+      navToPage('/policies')
+    } else {
+      showMessage('Policy creation failed###', result.message, 'error', 5000)
+      setError(result.message)
+    }
+  }
+
+  const handlePageChange = (pageNumber: number) => {
+    setActivePage(pageNumber)
+    let newLookupList = allLookup.filter(
+      x =>
+        !searchText || x.title.toLowerCase().includes(searchText.toLowerCase()),
+    )
+    setLookupCount(newLookupList.length)
+    newLookupList = newLookupList.slice(
+      (pageNumber - 1) * PAGE_SIZE,
+      (pageNumber - 1) * PAGE_SIZE + PAGE_SIZE,
+    )
+    setLookupList(newLookupList)
   }
 
   return (
@@ -478,15 +584,15 @@ const PolicyEdit = () => {
                 />
                 <CardPreview>
                   {!isLoading && (
-                    <div>
-                      <Divider />
-                      <div
-                        className={mergeClasses(
-                          styles.FullWidth,
-                          styles.PaddingBase,
-                        )}
-                      >
-                        <form>
+                    <form method="POST">
+                      <div>
+                        <Divider />
+                        <div
+                          className={mergeClasses(
+                            styles.FullWidth,
+                            styles.PaddingBase,
+                          )}
+                        >
                           <div>
                             <Label htmlFor="name" className={styles.Label}>
                               {'Name###' + ' *'}
@@ -540,95 +646,126 @@ const PolicyEdit = () => {
                               styles.MarginBottomSmall,
                             )}
                           />
-                        </form>
-                      </div>
-                      <TabList selectedValue={'permissions'}>
-                        <Tab id="Permissions" value="permissions">
-                          Permissions ###
-                        </Tab>
-                      </TabList>
-                      <div
-                        className={mergeClasses(
-                          styles.LayoutColumns,
-                          styles.MarginBase,
-                          styles.ColumnWrapper,
-                        )}
-                      >
-                        {permissionList.length > 0 ? (
-                          <div>
-                            <DataGrid
-                              items={permissionList}
-                              columns={columns}
-                              sortable
-                              getRowId={item => item.id}
-                              focusMode="composite"
-                              size="extra-small"
-                              columnSizingOptions={{
-                                resource: { idealWidth: 200 },
-                              }}
-                              resizableColumnsOptions={{ autoFitColumns: true }}
-                              resizableColumns={true}
-                            >
-                              <DataGridHeader>
-                                <DataGridRow>
-                                  {({ renderHeaderCell }) => (
-                                    <DataGridHeaderCell>
-                                      {renderHeaderCell()}
-                                    </DataGridHeaderCell>
-                                  )}
-                                </DataGridRow>
-                              </DataGridHeader>
-
-                              <DataGridBody<Permission>>
-                                {({ item, rowId }) => (
-                                  <DataGridRow<Permission> key={rowId}>
-                                    {({ renderCell }) => (
-                                      <DataGridCell>
-                                        {renderCell(item)}
-                                      </DataGridCell>
-                                    )}
-                                  </DataGridRow>
-                                )}
-                              </DataGridBody>
-                            </DataGrid>
-                          </div>
-                        ) : (
-                          <div
-                            className={mergeClasses(
-                              styles.FullWidth,
-                              styles.AlignCenter,
-                              styles.TextNote,
-                              styles.TextSmall,
-                            )}
-                          >
-                            <span>
-                              {"Policy doesn't have any permission###"}
-                            </span>
-                          </div>
-                        )}
+                        </div>
+                        <TabList selectedValue={'permissions'}>
+                          <Tab id="Permissions" value="permissions">
+                            Permissions ###
+                          </Tab>
+                        </TabList>
                         <div
                           className={mergeClasses(
-                            styles.MarginTopBase,
+                            styles.LayoutColumns,
+                            styles.MarginBase,
                             styles.ColumnWrapper,
-                            styles.FullWidth,
                           )}
                         >
-                          <div className={styles.Column6}>
-                            <Button onClick={addNewPermission}>
-                              Add new permission
-                            </Button>
-                          </div>
+                          {permissionList.length > 0 ? (
+                            <div>
+                              <DataGrid
+                                items={permissionList}
+                                columns={columns}
+                                sortable
+                                getRowId={item => item.id}
+                                focusMode="composite"
+                                size="extra-small"
+                                columnSizingOptions={{
+                                  resource: { idealWidth: 200 },
+                                }}
+                                resizableColumnsOptions={{
+                                  autoFitColumns: true,
+                                }}
+                                resizableColumns={true}
+                              >
+                                <DataGridHeader>
+                                  <DataGridRow>
+                                    {({ renderHeaderCell }) => (
+                                      <DataGridHeaderCell>
+                                        {renderHeaderCell()}
+                                      </DataGridHeaderCell>
+                                    )}
+                                  </DataGridRow>
+                                </DataGridHeader>
+
+                                <DataGridBody<Permission>>
+                                  {({ item, rowId }) => (
+                                    <DataGridRow<Permission> key={rowId}>
+                                      {({ renderCell }) => (
+                                        <DataGridCell>
+                                          {renderCell(item)}
+                                        </DataGridCell>
+                                      )}
+                                    </DataGridRow>
+                                  )}
+                                </DataGridBody>
+                              </DataGrid>
+                              {error && (
+                                <div
+                                  className={mergeClasses(
+                                    styles.TextError,
+                                    styles.AlignLeft,
+                                    styles.MarginLeftBase,
+                                  )}
+                                >
+                                  {error}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div
+                              className={mergeClasses(
+                                styles.FullWidth,
+                                styles.AlignCenter,
+                                styles.TextNote,
+                                styles.TextSmall,
+                              )}
+                            >
+                              <span>
+                                {"Policy doesn't have any permission###"}
+                              </span>
+                            </div>
+                          )}
                           <div
                             className={mergeClasses(
-                              styles.Column6,
-                              styles.AlignRight,
+                              styles.MarginTopBase,
+                              styles.ColumnWrapper,
+                              styles.FullWidth,
                             )}
                           >
-                            <Button appearance="primary">Save###</Button>
+                            <div className={styles.Column6}>
+                              <Button onClick={addNewPermission}>
+                                Add new permission
+                              </Button>
+                            </div>
+                            <div
+                              className={mergeClasses(
+                                styles.Column6,
+                                styles.AlignRight,
+                              )}
+                            >
+                              <Button
+                                type="submit"
+                                appearance="primary"
+                                onClick={e => savePolicy(e)}
+                                disabled={
+                                  formData.name === '' ||
+                                  formData.description === '' ||
+                                  permissionList.length === 0 ||
+                                  permissionList.some(
+                                    x =>
+                                      x.asset === '' ||
+                                      x.operation === '' ||
+                                      (x.resourceid.length === 1 &&
+                                        x.resourceid[0] === 0),
+                                  )
+                                }
+                              >
+                                Save###
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </form>
                   )}
                 </CardPreview>
               </Card>
@@ -643,43 +780,60 @@ const PolicyEdit = () => {
             <DialogContent>
               {!isLoadingLookup && (
                 <div>
-                  <SearchBox
-                    placeholder="Search###"
-                    size="medium"
-                    onChange={onSearchChange}
-                  ></SearchBox>
-                  <DataGrid
-                    columnSizingOptions={{
-                      selection: { idealWidth: 30 },
-                    }}
-                    items={lookupList}
-                    columns={lookupColumns}
-                    sortable
-                    getRowId={item => item.id}
-                    focusMode="composite"
-                    size="extra-small"
-                    resizableColumnsOptions={{ autoFitColumns: true }}
-                    resizableColumns={true}
-                  >
-                    <DataGridHeader>
-                      <DataGridRow>
-                        {({ renderHeaderCell }) => (
-                          <DataGridHeaderCell>
-                            {renderHeaderCell()}
-                          </DataGridHeaderCell>
-                        )}
-                      </DataGridRow>
-                    </DataGridHeader>
-                    <DataGridBody<Lookup>>
-                      {({ item, rowId }) => (
-                        <DataGridRow<Lookup> key={rowId}>
-                          {({ renderCell }) => (
-                            <DataGridCell>{renderCell(item)}</DataGridCell>
+                  <div className={styles.AlignLeft}>
+                    <SearchBox
+                      className={mergeClasses(styles.FormControlsFullWidth)}
+                      placeholder="Search###"
+                      onChange={onSearchChange}
+                    ></SearchBox>
+                  </div>
+                  <div className={styles.MarginTopBase}>
+                    <DataGrid
+                      columnSizingOptions={{
+                        selection: { idealWidth: 30 },
+                      }}
+                      items={lookupList}
+                      columns={lookupColumns}
+                      sortable
+                      getRowId={item => item.id}
+                      focusMode="composite"
+                      resizableColumnsOptions={{ autoFitColumns: true }}
+                      resizableColumns={true}
+                    >
+                      <DataGridHeader>
+                        <DataGridRow>
+                          {({ renderHeaderCell }) => (
+                            <DataGridHeaderCell>
+                              {renderHeaderCell()}
+                            </DataGridHeaderCell>
                           )}
                         </DataGridRow>
+                      </DataGridHeader>
+                      <DataGridBody<Lookup>>
+                        {({ item, rowId }) => (
+                          <DataGridRow<Lookup> key={rowId}>
+                            {({ renderCell }) => (
+                              <DataGridCell>{renderCell(item)}</DataGridCell>
+                            )}
+                          </DataGridRow>
+                        )}
+                      </DataGridBody>
+                    </DataGrid>
+                    <div
+                      className={mergeClasses(
+                        styles.MarginTopBase,
+                        styles.PaginationWrapper,
                       )}
-                    </DataGridBody>
-                  </DataGrid>
+                    >
+                      <Pagination
+                        activePage={activePage}
+                        itemsCountPerPage={PAGE_SIZE}
+                        totalItemsCount={lookupCount}
+                        pageRangeDisplayed={5}
+                        onChange={handlePageChange}
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
             </DialogContent>

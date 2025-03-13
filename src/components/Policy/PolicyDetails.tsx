@@ -22,7 +22,7 @@ import {
 } from '@fluentui/react-components'
 import { useEffect, useState } from 'react'
 import { t } from 'i18next'
-import { getPolicy } from '../../services/PolicyService'
+import { deletePolicy, getPolicy } from '../../services/PolicyService'
 import auth from '../../hooks/useAuth'
 import Policy from '../../types/Policy'
 import Breadcrumbs from '../Breadcrumbs'
@@ -30,6 +30,8 @@ import Format from '../../styles/format'
 import Spacing from '../../styles/spacing'
 import Permission from '../../types/Permission'
 import { Edit16Filled } from '@fluentui/react-icons'
+import DeleteButton from '../DeleteButton'
+import { useMessage } from '../../context/MessageProvider'
 
 const useStyles = makeStyles({
   ...Structure.Structure,
@@ -44,12 +46,12 @@ const PolicyDetails = () => {
   const [isLoading, setIsLoading] = useState(true)
 
   const navigate = useNavigate()
+  const { showMessage } = useMessage()
+  const styles = useStyles()
 
   const navToPage = (url: string) => {
     navigate(url)
   }
-
-  const styles = useStyles()
 
   const accessToken = auth().accessToken
   const userPermissions = auth().permissions
@@ -58,6 +60,10 @@ const PolicyDetails = () => {
     const fetchData = async () => {
       if (!isNew) {
         const policy = await getPolicy(accessToken, id || '0')
+        if (!policy.id) {
+          navigate('/policies', { replace: true })
+          return
+        }
         setPolicy(policy)
         setIsLoading(false)
       } else {
@@ -103,10 +109,25 @@ const PolicyDetails = () => {
       },
 
       renderCell: item => {
-        return item.resourceid[0] == -1 ? '*' : '...todo'
+        return item.resourceid[0] == -1
+          ? '*'
+          : item.resourceid.length +
+              ' item' +
+              (item.resourceid.length === 1 ? '' : 's')
       },
     }),
   ]
+
+  const removePolicy = () => {
+    deletePolicy(Number(id), accessToken).then(() => {
+      showMessage(
+        'Policy "' + policy.name + '" deleted successfully###',
+        '',
+        'success',
+      )
+      navigate('/policies', { replace: true })
+    })
+  }
 
   return (
     <div className={styles.ColumnWrapper}>
@@ -133,15 +154,22 @@ const PolicyDetails = () => {
                 >
                   {userPermissions.some(
                     x =>
-                      x.includes('Permission:WRITE:-1') ||
-                      x.includes('Permission:WRITE:' + id),
+                      x.includes('Policy:WRITE:-1') ||
+                      x.includes('Policy:WRITE:' + id),
                   ) ? (
-                    <Button
-                      icon={<Edit16Filled />}
-                      onClick={() => navToPage('/policies/edit/' + id)}
-                    >
-                      Edit###
-                    </Button>
+                    <>
+                      <DeleteButton
+                        props={{ action: policy.name }}
+                        onDelete={removePolicy}
+                      ></DeleteButton>
+                      <Button
+                        icon={<Edit16Filled />}
+                        onClick={() => navToPage('/policies/edit/' + id)}
+                        className={styles.MarginLeftBase}
+                      >
+                        Edit###
+                      </Button>
+                    </>
                   ) : null}
                 </div>
               </div>
@@ -174,7 +202,7 @@ const PolicyDetails = () => {
                     </div>
                   </div>
                 </div>
-                <div className={styles.Column3}>
+                <div className={styles.Column6}>
                   <div className={styles.FullWidth}>
                     <Caption1>{t('policies.updatedon')}</Caption1>
                   </div>

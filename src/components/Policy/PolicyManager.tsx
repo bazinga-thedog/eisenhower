@@ -5,6 +5,7 @@ import {
   Card,
   CardHeader,
   CardPreview,
+  CheckboxOnChangeData,
   createTableColumn,
   DataGrid,
   DataGridBody,
@@ -14,12 +15,18 @@ import {
   DataGridRow,
   InputOnChangeData,
   makeStyles,
+  Menu,
+  MenuItem,
+  MenuList,
+  MenuPopover,
+  MenuTrigger,
   mergeClasses,
   SearchBox,
   SearchBoxChangeEvent,
   Subtitle1,
   TableCellLayout,
   TableColumnDefinition,
+  TableSelectionCell,
   Tooltip,
 } from '@fluentui/react-components'
 import { useEffect, useState } from 'react'
@@ -27,12 +34,26 @@ import { Link, useNavigate } from 'react-router-dom'
 import { t } from 'i18next'
 import auth from '../../hooks/useAuth'
 import Structure from '../../styles/structure'
-import { getAllPolicies } from '../../services/PolicyService'
+import { deletePolicy, getAllPolicies } from '../../services/PolicyService'
 import Spacing from '../../styles/spacing'
 import Format from '../../styles/format'
-import { InfoFilled } from '@fluentui/react-icons'
+import {
+  Delete16Regular,
+  InfoFilled,
+  MoreVerticalFilled,
+} from '@fluentui/react-icons'
 import Policy from '../../types/Policy'
 import Breadcrumbs from '../Breadcrumbs'
+import Pagination from 'react-js-pagination'
+import PaginationStyle from '../../styles/pagination'
+import {
+  DefaultButton,
+  Dialog,
+  DialogFooter,
+  PrimaryButton,
+  TextField,
+} from '@fluentui/react'
+import { useMessage } from '../../context/MessageProvider'
 
 const useStyles = makeStyles({
   card: {
@@ -45,6 +66,7 @@ const useStyles = makeStyles({
   ...Spacing.Spacing,
   ...Structure.Structure,
   ...Format.Format,
+  ...PaginationStyle.Pagination,
   tweakIcon: { paddingTop: '5px' },
 })
 
@@ -53,6 +75,16 @@ let allPolicies: Policy[] = []
 const PolicyManager = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [policies, setPolicies] = useState([] as Policy[])
+  const [selectedIds, setSelectedIds] = useState(new Set<number>())
+  const [selection, setSelection] = useState(false as 'mixed' | boolean)
+  const [activePage, setActivePage] = useState(1)
+  const [searchText, setSearchText] = useState('')
+  const [policyCount, setPolicyCount] = useState(0)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [inputValue, setInputValue] = useState('')
+
+  const PAGE_SIZE = 3
+
   const navigate = useNavigate()
 
   const navToPage = (url: string) => {
@@ -60,12 +92,15 @@ const PolicyManager = () => {
   }
 
   const accessToken = auth().accessToken
+  const { showMessage } = useMessage()
+  const userPermissions = auth().permissions
 
   useEffect(() => {
     const fetchData = async () => {
       const policies = await getAllPolicies(accessToken)
-      setPolicies(policies)
+      setPolicies(policies.slice(0, PAGE_SIZE))
       allPolicies = policies
+      setPolicyCount(allPolicies.length)
       setIsLoading(false)
     }
 
@@ -76,18 +111,44 @@ const PolicyManager = () => {
     ev: SearchBoxChangeEvent,
     data: InputOnChangeData,
   ) => void = (_, data) => {
-    setPolicies(
-      allPolicies.filter(
-        x =>
-          x.name.toLowerCase().includes(data.value.toLowerCase()) ||
-          x.updatedby.name.toLowerCase().includes(data.value.toLowerCase()),
-      ),
+    setActivePage(1)
+    setSearchText(data.value)
+    let newPolicyList = allPolicies.filter(
+      x =>
+        !data.value ||
+        x.name.toLowerCase().includes(data.value.toLowerCase()) ||
+        x.updatedby.name.toLowerCase().includes(data.value.toLowerCase()),
     )
+    setPolicyCount(newPolicyList.length)
+    newPolicyList = newPolicyList.slice(0, PAGE_SIZE)
+    setPolicies(newPolicyList)
   }
 
   const styles = useStyles()
 
   const columns: TableColumnDefinition<Policy>[] = [
+    createTableColumn({
+      columnId: 'selection',
+      renderHeaderCell: () => (
+        <TableSelectionCell
+          onChange={e => {
+            handleFullCheckChange(e.target as HTMLInputElement)
+          }}
+          checked={selection}
+        />
+      ),
+      renderCell: row => (
+        <TableSelectionCell
+          checked={selectedIds.has(row.id)}
+          onChange={e =>
+            handleRowSelect({
+              rowId: row.id,
+              selected: (e.target as HTMLInputElement).checked,
+            })
+          }
+        />
+      ),
+    }),
     createTableColumn<Policy>({
       columnId: 'name',
       compare: (a, b) => {
@@ -143,6 +204,84 @@ const PolicyManager = () => {
       },
     }),
   ]
+
+  const handleRowSelect = ({
+    rowId,
+    selected,
+  }: {
+    rowId: number
+    selected: boolean
+  }) => {
+    setSelectedIds(prevSelected => {
+      const newSelected = new Set(prevSelected)
+      selected ? newSelected.add(rowId) : newSelected.delete(rowId)
+      setSelection(
+        newSelected.size > 0
+          ? newSelected.size === allPolicies.length
+            ? true
+            : 'mixed'
+          : false,
+      )
+      return newSelected
+    })
+  }
+
+  const handleFullCheckChange = (data: CheckboxOnChangeData) => {
+    let newSelection = []
+    if (!data.checked) {
+      setSelectedIds(new Set())
+    } else {
+      newSelection = [...selectedIds, ...policies.map(x => x.id)]
+      setSelectedIds(new Set(newSelection))
+    }
+    setSelection(
+      data.checked
+        ? newSelection.length === allPolicies.length
+          ? true
+          : 'mixed'
+        : false,
+    )
+  }
+
+  const handlePageChange = (pageNumber: number) => {
+    setActivePage(pageNumber)
+    let newPolicyList = allPolicies.filter(
+      x =>
+        !searchText ||
+        x.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        x.updatedby.name.toLowerCase().includes(searchText.toLowerCase()),
+    )
+    setPolicyCount(newPolicyList.length)
+    newPolicyList = newPolicyList.slice(
+      (pageNumber - 1) * PAGE_SIZE,
+      (pageNumber - 1) * PAGE_SIZE + PAGE_SIZE,
+    )
+    setPolicies(newPolicyList)
+  }
+
+  const openDialog = () => {
+    setInputValue('') // Reset input field
+    setIsDialogOpen(true)
+  }
+  const closeDialog = () => setIsDialogOpen(false)
+  const confirmDelete = () => {
+    if (
+      inputValue ===
+      'DELETE ' +
+        selectedIds.size +
+        ' polic' +
+        (selectedIds.size === 1 ? 'y' : 'ies')
+    ) {
+      selectedIds.forEach(id => {
+        deletePolicy(id, accessToken)
+      })
+      showMessage('Policy deleted successfully###', '', 'success')
+      closeDialog()
+      setTimeout(() => {
+        window.location.href = window.location.href
+      }, 1000)
+    }
+  }
 
   return (
     <div className={styles.ColumnWrapper}>
@@ -226,12 +365,37 @@ const PolicyManager = () => {
                 <div
                   className={mergeClasses(styles.Column6, styles.AlignRight)}
                 >
-                  <Button
-                    appearance="primary"
-                    onClick={() => navToPage('/policies/edit')}
-                  >
-                    {t('policies.create')}
-                  </Button>
+                  {userPermissions.some(x => x.includes('Policy:WRITE:-1')) ? (
+                    <>
+                      <Button
+                        appearance="primary"
+                        onClick={() => navToPage('/policies/edit')}
+                      >
+                        {t('policies.create')}
+                      </Button>
+                      <Menu>
+                        <MenuTrigger disableButtonEnhancement>
+                          <Button
+                            className={styles.MarginLeftBase}
+                            icon={<MoreVerticalFilled />}
+                            appearance="subtle"
+                            size="small"
+                          />
+                        </MenuTrigger>
+                        <MenuPopover>
+                          <MenuList>
+                            <MenuItem
+                              icon={<Delete16Regular />}
+                              disabled={selectedIds.size === 0}
+                              onClick={openDialog}
+                            >
+                              Delete###
+                            </MenuItem>
+                          </MenuList>
+                        </MenuPopover>
+                      </Menu>
+                    </>
+                  ) : null}
                 </div>
               </div>
             }
@@ -239,47 +403,84 @@ const PolicyManager = () => {
 
           <CardPreview>
             {!isLoading && (
-              <DataGrid
-                items={policies}
-                columns={columns}
-                sortable
-                selectionMode="multiselect"
-                getRowId={item => item.id}
-                focusMode="composite"
-                style={{ minWidth: '550px' }}
-              >
-                <DataGridHeader>
-                  <DataGridRow
-                    selectionCell={{
-                      checkboxIndicator: { 'aria-label': 'Select all rows' },
-                    }}
-                  >
-                    {({ renderHeaderCell }) => (
-                      <DataGridHeaderCell>
-                        {renderHeaderCell()}
-                      </DataGridHeaderCell>
-                    )}
-                  </DataGridRow>
-                </DataGridHeader>
-
-                <DataGridBody<Policy>>
-                  {({ item, rowId }) => (
-                    <DataGridRow<Policy>
-                      key={rowId}
-                      selectionCell={{
-                        checkboxIndicator: { 'aria-label': 'Select row' },
-                      }}
-                    >
-                      {({ renderCell }) => (
-                        <DataGridCell>{renderCell(item)}</DataGridCell>
+              <>
+                <DataGrid
+                  columnSizingOptions={{
+                    selection: { idealWidth: 30 },
+                  }}
+                  items={policies}
+                  columns={columns}
+                  sortable
+                  getRowId={item => item.id}
+                  focusMode="composite"
+                  resizableColumnsOptions={{ autoFitColumns: false }}
+                  resizableColumns={true}
+                >
+                  <DataGridHeader>
+                    <DataGridRow>
+                      {({ renderHeaderCell }) => (
+                        <DataGridHeaderCell>
+                          {renderHeaderCell()}
+                        </DataGridHeaderCell>
                       )}
                     </DataGridRow>
+                  </DataGridHeader>
+
+                  <DataGridBody<Policy>>
+                    {({ item, rowId }) => (
+                      <DataGridRow<Policy> key={rowId}>
+                        {({ renderCell }) => (
+                          <DataGridCell>{renderCell(item)}</DataGridCell>
+                        )}
+                      </DataGridRow>
+                    )}
+                  </DataGridBody>
+                </DataGrid>
+                <div
+                  className={mergeClasses(
+                    styles.MarginTopBase,
+                    styles.PaginationWrapper,
                   )}
-                </DataGridBody>
-              </DataGrid>
+                >
+                  <div className={styles.MarginBase}>
+                    <Pagination
+                      activePage={activePage}
+                      itemsCountPerPage={PAGE_SIZE}
+                      totalItemsCount={policyCount}
+                      pageRangeDisplayed={5}
+                      onChange={handlePageChange}
+                    />
+                  </div>
+                </div>
+              </>
             )}
           </CardPreview>
         </Card>
+        <Dialog
+          hidden={!isDialogOpen}
+          onDismiss={closeDialog}
+          dialogContentProps={{
+            title: 'Are you sure?',
+            subText: `Type "DELETE ${selectedIds.size} polic${selectedIds.size === 1 ? `y` : `ies`}" to confirm. This action cannot be undone. `,
+          }}
+        >
+          <TextField
+            placeholder={`Type "DELETE ${selectedIds.size} polic${selectedIds.size === 1 ? `y` : `ies`}" to confirm.`}
+            value={inputValue}
+            onChange={(e, newValue) => setInputValue(newValue || '')}
+          />
+          <DialogFooter>
+            <PrimaryButton
+              onClick={confirmDelete}
+              text="Delete"
+              disabled={
+                inputValue !==
+                `DELETE ${selectedIds.size} polic${selectedIds.size === 1 ? `y` : `ies`}`
+              }
+            />
+            <DefaultButton onClick={closeDialog} text="Cancel" />
+          </DialogFooter>
+        </Dialog>
       </div>
     </div>
   )
