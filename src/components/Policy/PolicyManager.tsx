@@ -276,7 +276,7 @@ const PolicyManager = () => {
         deletePolicy(id, accessToken)
       })
       showMessage(
-        `${t('policy.policy_plural')} ${t('policy.delete_success')}`,
+        `${t('policies.policy_plural')} ${t('policies.delete_success')}`,
         '',
         'success',
       )
@@ -470,11 +470,11 @@ const PolicyManager = () => {
                     )}
                   >
                     <span>
-                      {t('policy.not_found') +
+                      {t('policies.not_found') +
                         (userPermissions.some(x =>
                           x.includes('Policy:WRITE:-1'),
                         )
-                          ? ` ${t('policy.create_start')}.`
+                          ? ` ${t('policies.create_start')}.`
                           : '')}
                     </span>
                   </div>

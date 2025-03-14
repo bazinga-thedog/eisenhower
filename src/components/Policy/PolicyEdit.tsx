@@ -472,14 +472,14 @@ const PolicyEdit = () => {
       : await updatePolicy(policy, accessToken)
     if (result.success) {
       showMessage(
-        `${t('policy.policy')} "${policy.name}" ${t('general.success_past')} ${isNew ? t('general.created') : t('general.updated')}`,
+        `${t('policies.policy')} "${policy.name}" ${t('general.success_past')} ${isNew ? t('general.created') : t('general.updated')}`,
         '',
         'success',
         2000,
       )
       navToPage('/policies')
     } else {
-      showMessage(t('policy.error_creation'), result.message, 'error', 5000)
+      showMessage(t('policies.error_creation'), result.message, 'error', 5000)
       setError(result.message)
     }
   }
@@ -512,7 +512,7 @@ const PolicyEdit = () => {
             styles.ScrollableContent,
           )}
         >
-          <Title3>{isNew ? t('policy.create') : t('policy.edit')}</Title3>
+          <Title3>{isNew ? t('policies.create') : t('policies.edit')}</Title3>
           <div
             className={mergeClasses(
               styles.LayoutColumns,
@@ -731,7 +731,7 @@ const PolicyEdit = () => {
                           >
                             <div className={styles.Column6}>
                               <Button onClick={addNewPermission}>
-                                {t('policy.add_permission')}
+                                {t('policies.add_permission')}
                               </Button>
                             </div>
                             <div
