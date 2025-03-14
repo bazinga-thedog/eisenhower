@@ -14,13 +14,13 @@ const enTranslations = {
       name: 'Name',
       permissions: 'Permissions',
       restricted: 'Restricted',
+      save: 'Save',
       search: 'Search',
       select_available: 'Select available',
       success_past: 'has been successfully',
       title: 'Title',
       updated: 'updated',
     },
-
     login: {
       title: 'Login',
       username: 'Username',

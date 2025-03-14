@@ -615,7 +615,7 @@ const PolicyEdit = () => {
                             onChange={e => {
                               handleChange(e, 20)
                             }}
-                            placeholder={t('policy:name_ph')}
+                            placeholder={t('policies.name_ph')}
                             required
                             className={mergeClasses(
                               styles.FormControlsFullWidth,
@@ -639,7 +639,7 @@ const PolicyEdit = () => {
                             onChange={e => {
                               handleChange(e, 90)
                             }}
-                            placeholder={t('policy:description_ph')}
+                            placeholder={t('policies.description_ph')}
                             required
                             className={mergeClasses(
                               styles.FormControlsFullWidth,
@@ -743,7 +743,8 @@ const PolicyEdit = () => {
                               <Button
                                 onClick={navToPage.bind(
                                   null,
-                                  '/policies/' + id,
+                                  '/policies' +
+                                    (id && parseInt(id) > 0 ? '/' + id : ''),
                                 )}
                               >
                                 {t('general.cancel')}
