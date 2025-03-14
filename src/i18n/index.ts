@@ -8,5 +8,4 @@ i18n.use(LanguageDetector).init({
   fallbackLng: 'en',
   defaultNS: 'translations',
 })
-
 export default i18n

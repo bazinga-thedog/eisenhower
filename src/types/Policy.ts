@@ -12,10 +12,10 @@ interface Policy {
 
 export interface PolicyStructure {
   id: number
-  name: string
   description: string
   updatedon: string
   updatedby: number
+  name: string
   user_name: string
 }
 

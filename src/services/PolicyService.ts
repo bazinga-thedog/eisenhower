@@ -1,4 +1,5 @@
 import { configs_servicebus } from '../configs/configs_servicebus'
+import i18n from '../i18n'
 import Permission from '../types/Permission'
 import Policy, {
   PolicyPermissionStructure,
@@ -16,6 +17,7 @@ export const getAllPolicies = async (
       headers: {
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + accessToken,
+        'x-lang': i18n.language,
       },
       credentials: 'include',
     },
@@ -25,7 +27,7 @@ export const getAllPolicies = async (
     return []
   }
 
-  const policies: [PolicyStructure] = await response.json()
+  const policies: PolicyStructure[] = await response.json()
 
   return policies.map(
     x =>
@@ -49,6 +51,7 @@ export const getPolicy = async (
       headers: {
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + accessToken,
+        'x-lang': i18n.language,
       },
       credentials: 'include',
     },
@@ -124,6 +127,7 @@ export const updatePolicy = async (
       headers: {
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + accessToken,
+        'x-lang': i18n.language,
       },
       body: JSON.stringify(policy),
       credentials: 'include',

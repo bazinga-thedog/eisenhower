@@ -54,6 +54,7 @@ import {
   TextField,
 } from '@fluentui/react'
 import { useMessage } from '../../context/MessageProvider'
+import i18n from '../../i18n'
 
 const useStyles = makeStyles({
   card: {
@@ -155,7 +156,7 @@ const PolicyManager = () => {
         return a.name.localeCompare(b.name)
       },
       renderHeaderCell: () => {
-        return 'Policy Name'
+        return t('general.name')
       },
       renderCell: item => {
         return (
@@ -173,7 +174,7 @@ const PolicyManager = () => {
         return a.updatedby.name.localeCompare(b.updatedby.name)
       },
       renderHeaderCell: () => {
-        return 'Updated by'
+        return t('policies.updatedby')
       },
       renderCell: item => {
         return (
@@ -196,11 +197,11 @@ const PolicyManager = () => {
         return a.updatedon.getTime() - b.updatedon.getTime()
       },
       renderHeaderCell: () => {
-        return 'Last updated'
+        return t('policies.updatedon')
       },
 
       renderCell: item => {
-        return item.updatedon?.toDateString()
+        return item.updatedon?.toLocaleString(i18n.language).replace(',', '')
       },
     }),
   ]
@@ -305,7 +306,7 @@ const PolicyManager = () => {
                 <div className={styles.Column6}>
                   <div>
                     <div className={styles.Flex}>
-                      <Subtitle1>Policies</Subtitle1>
+                      <Subtitle1>{t('policies.policy_plural')}</Subtitle1>
                       <span
                         className={mergeClasses(
                           styles.MarginLeftBase,
@@ -487,25 +488,25 @@ const PolicyManager = () => {
           hidden={!isDialogOpen}
           onDismiss={closeDialog}
           dialogContentProps={{
-            title: 'Are you sure?',
-            subText: `Type "DELETE ${selectedIds.size} polic${selectedIds.size === 1 ? `y` : `ies`}" to confirm. This action cannot be undone. `,
+            title: t('general.are_you_sure'),
+            subText: `${t('general.type')} "DELETE ${selectedIds.size} polic${selectedIds.size === 1 ? `y` : `ies`}" ${t('general.to_confirm_undone')}. `,
           }}
         >
           <TextField
-            placeholder={`Type "DELETE ${selectedIds.size} polic${selectedIds.size === 1 ? `y` : `ies`}" to confirm.`}
+            placeholder={`${t('general.type')} "DELETE ${selectedIds.size} polic${selectedIds.size === 1 ? `y` : `ies`}" ${t('general.to_confirm')}.`}
             value={inputValue}
             onChange={(e, newValue) => setInputValue(newValue || '')}
           />
           <DialogFooter>
             <PrimaryButton
               onClick={confirmDelete}
-              text="Delete"
+              text={t('general.delete')}
               disabled={
                 inputValue !==
                 `DELETE ${selectedIds.size} polic${selectedIds.size === 1 ? `y` : `ies`}`
               }
             />
-            <DefaultButton onClick={closeDialog} text="Cancel" />
+            <DefaultButton onClick={closeDialog} text={t('general.cancel')} />
           </DialogFooter>
         </Dialog>
       </div>

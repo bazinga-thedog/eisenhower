@@ -1,6 +1,7 @@
 import React from 'react'
 import { SearchBox, Tooltip } from '@fluentui/react-components'
 import '../assets/style/NavBar.css'
+import LanguageSwitcher from './LanguageSwitcher'
 
 const defaultProps: INavBarOptionalProps = {
   hasLoggedUser: true,
@@ -20,17 +21,17 @@ const NavBar = (props: INavBarOptionalProps) => {
       <div className="logo ms-font-xl">
         <strong>Awesome App</strong>
       </div>
-
-      {hasLoggedUser ? (
-        <div className="searchbox">
+      <div className="searchbox">
+        <LanguageSwitcher />
+        {hasLoggedUser ? (
           <SearchBox
             placeholder="Search"
             onChange={newValue =>
               console.log('SearchBox onChange fired: ' + newValue)
             }
           />
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   )
 }

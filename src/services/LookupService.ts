@@ -1,4 +1,5 @@
 import { configs_servicebus } from '../configs/configs_servicebus'
+import i18n from '../i18n'
 import Lookup from '../types/Lookup'
 
 export const getLookup = async (
@@ -12,6 +13,7 @@ export const getLookup = async (
       headers: {
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + accessToken,
+        'x-lang': i18n.language,
       },
       credentials: 'include',
     },

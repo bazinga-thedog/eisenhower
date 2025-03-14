@@ -2,8 +2,10 @@ const enTranslations = {
   translations: {
     general: {
       all: 'All',
+      are_you_sure: 'Are you sure?',
       cancel: 'Cancel',
       close: 'Close',
+
       create: 'create',
       created: 'created',
       delete: 'Delete',
@@ -19,6 +21,9 @@ const enTranslations = {
       select_available: 'Select available',
       success_past: 'has been successfully',
       title: 'Title',
+      to_confirm_undone: 'to confirm. This action cannot be undone',
+      to_confirm: 'to confirm',
+      type: 'Type',
       updated: 'updated',
     },
     login: {
@@ -56,6 +61,13 @@ const enTranslations = {
       resource: 'Resource',
       updatedon: 'Last updated on',
       updatedby: 'Last updated by',
+    },
+    enums: {
+      Pages: 'Pages',
+      Policy: 'Policy',
+      User: 'User',
+      READ: 'READ',
+      WRITE: 'WRITE',
     },
   },
 }

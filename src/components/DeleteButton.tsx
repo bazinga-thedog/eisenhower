@@ -41,22 +41,22 @@ const DeleteButton: React.FC<{
         hidden={!isDialogOpen}
         onDismiss={closeDialog}
         dialogContentProps={{
-          title: 'Are you sure?',
-          subText: `This action cannot be undone. Type "DELETE ${action}" to confirm.`,
+          title: t('general.are_you_sure'),
+          subText: `${t('general.type')} "DELETE ${action}" ${t('general.to_confirm_undone')}.`,
         }}
       >
         <TextField
-          placeholder={`Type "DELETE ${action}" to confirm.`}
+          placeholder={`${t('general.type')} "DELETE ${action}" ${t('general.to_confirm')}.`}
           value={inputValue}
           onChange={(e, newValue) => setInputValue(newValue || '')}
         />
         <DialogFooter>
           <PrimaryButton
             onClick={confirmDelete}
-            text="Delete"
+            text={t('general.delete')}
             disabled={inputValue !== `DELETE ${action}`}
           />
-          <DefaultButton onClick={closeDialog} text="Cancel" />
+          <DefaultButton onClick={closeDialog} text={t('general.cancel')} />
         </DialogFooter>
       </Dialog>
     </>

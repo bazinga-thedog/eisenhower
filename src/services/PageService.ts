@@ -1,4 +1,5 @@
 import { configs_servicebus } from '../configs/configs_servicebus'
+import i18n from '../i18n'
 import Page, { PageServiceStructure } from '../types/Page'
 
 const build = (
@@ -33,6 +34,7 @@ export const getAllPages = async (accessToken: string): Promise<Page[]> => {
       headers: {
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + accessToken,
+        'x-lang': i18n.language,
       },
       credentials: 'include',
     },

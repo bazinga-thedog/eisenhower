@@ -32,6 +32,7 @@ import Permission from '../../types/Permission'
 import { Edit16Filled } from '@fluentui/react-icons'
 import DeleteButton from '../DeleteButton'
 import { useMessage } from '../../context/MessageProvider'
+import i18n from '../../i18n'
 
 const useStyles = makeStyles({
   ...Structure.Structure,
@@ -84,7 +85,7 @@ const PolicyDetails = () => {
         return t('policies.asset')
       },
       renderCell: item => {
-        return <TableCellLayout>{item.asset}</TableCellLayout>
+        return <TableCellLayout>{t(`enums.${item.asset}`)}</TableCellLayout>
       },
     }),
     createTableColumn<Permission>({
@@ -96,7 +97,7 @@ const PolicyDetails = () => {
         return t('policies.permission')
       },
       renderCell: item => {
-        return <TableCellLayout>{item.operation}</TableCellLayout>
+        return <TableCellLayout>{t(`enums.${item.operation}`)}</TableCellLayout>
       },
     }),
     createTableColumn<Permission>({
@@ -214,7 +215,7 @@ const PolicyDetails = () => {
                       )}
                     >
                       <span className={styles.MarginLeftSmall}>
-                        {policy.updatedon?.toUTCString()}
+                        {policy.updatedon?.toLocaleString(i18n.language)}
                       </span>
                     </div>
                   </div>

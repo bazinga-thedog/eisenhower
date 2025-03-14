@@ -5,7 +5,6 @@ import {
   Card,
   CardHeader,
   CardPreview,
-  Combobox,
   createTableColumn,
   DataGrid,
   DataGridBody,
@@ -42,6 +41,7 @@ import {
   SearchBoxChangeEvent,
   InputOnChangeData,
   CheckboxOnChangeData,
+  Dropdown,
 } from '@fluentui/react-components'
 import { useEffect, useState } from 'react'
 import { t } from 'i18next'
@@ -76,6 +76,7 @@ const useStyles = makeStyles({
   ...PaginationStyle.Pagination,
   tweakIcon: { paddingTop: '5px' },
   tweakCombo: { minWidth: '0', '& input': { width: '100%' } },
+  tweakDropdown: { '& .fui-TableCellLayout__content': { width: '100%' } },
 })
 
 let allLookup: Lookup[] = []
@@ -215,22 +216,33 @@ const PolicyEdit = () => {
       },
       renderCell: item => {
         return (
-          <TableCellLayout>
-            <Combobox
+          <TableCellLayout
+            className={mergeClasses(
+              styles.FormControlsFullWidth,
+              styles.tweakDropdown,
+            )}
+          >
+            <Dropdown
               size="small"
               placeholder={t('policies.asset_select')}
-              className={styles.tweakCombo}
+              className={mergeClasses(
+                styles.tweakCombo,
+                styles.FormControlsFullWidth,
+              )}
               clearable
-              value={item.asset}
+              value={item.asset ? t('enums.' + item.asset) : ''}
               onOptionSelect={(ev, data) =>
                 onAssetOptionSelect(ev, data, item.id)
               }
             >
               {configs_permission_assets.map(value => {
-                console.log()
-                return <Option key={value}>{value}</Option>
+                return (
+                  <Option text={t(`${'enums.' + value}`)} value={value}>
+                    {t(`${'enums.' + value}`)}
+                  </Option>
+                )
               })}
-            </Combobox>
+            </Dropdown>
           </TableCellLayout>
         )
       },
@@ -245,20 +257,32 @@ const PolicyEdit = () => {
       },
       renderCell: item => {
         return (
-          <TableCellLayout>
-            <Combobox
+          <TableCellLayout
+            className={mergeClasses(
+              styles.FormControlsFullWidth,
+              styles.tweakDropdown,
+            )}
+          >
+            <Dropdown
               size="small"
               placeholder={t('policies.operation_select')}
-              className={styles.tweakCombo}
-              value={item.operation}
+              className={mergeClasses(
+                styles.tweakCombo,
+                styles.FormControlsFullWidth,
+              )}
+              value={item.operation ? t('enums.' + item.operation) : ''}
               onOptionSelect={(ev, data) =>
                 onOperationOptionSelect(ev, data, item.id)
               }
             >
               {configs_permission_operation.map(value => {
-                return <Option key={value}>{value}</Option>
+                return (
+                  <Option text={t(`${'enums.' + value}`)} value={value}>
+                    {t(`${'enums.' + value}`)}
+                  </Option>
+                )
               })}
-            </Combobox>
+            </Dropdown>
           </TableCellLayout>
         )
       },
@@ -526,7 +550,7 @@ const PolicyEdit = () => {
                     <div className={styles.LayoutColumns}>
                       <div className={styles.FullWidth}>
                         <div className={styles.Flex}>
-                          <Subtitle1>Policies</Subtitle1>
+                          <Subtitle1>{t('policies.policy_plural')}</Subtitle1>
                           <span
                             className={mergeClasses(
                               styles.MarginLeftBase,
@@ -537,7 +561,7 @@ const PolicyEdit = () => {
                             |
                           </span>
                           <Tooltip
-                            content={'...todo_create_content'}
+                            content={t('policies.info_content')}
                             positioning="above-start"
                             withArrow
                             relationship="label"
@@ -570,7 +594,7 @@ const PolicyEdit = () => {
                             styles.TextNote,
                           )}
                         >
-                          <Caption1>{'...todo_create_content'}</Caption1>
+                          <Caption1>{t('policies.description')}</Caption1>
                         </div>
                       </div>
                       <div
