@@ -275,7 +275,11 @@ const PolicyManager = () => {
       selectedIds.forEach(id => {
         deletePolicy(id, accessToken)
       })
-      showMessage('Policy deleted successfully###', '', 'success')
+      showMessage(
+        `${t('policy.policy_plural')} ${t('policy.delete_success')}`,
+        '',
+        'success',
+      )
       closeDialog()
       setTimeout(() => {
         window.location.href = window.location.href
@@ -354,7 +358,7 @@ const PolicyManager = () => {
                       )}
                     >
                       <SearchBox
-                        placeholder="Search###"
+                        placeholder={t('general.search')}
                         size="medium"
                         className={styles.FormControlsFullWidth}
                         onChange={onSearchChange}
@@ -389,7 +393,7 @@ const PolicyManager = () => {
                               disabled={selectedIds.size === 0}
                               onClick={openDialog}
                             >
-                              Delete###
+                              {t('general.delete')}
                             </MenuItem>
                           </MenuList>
                         </MenuPopover>
@@ -403,56 +407,79 @@ const PolicyManager = () => {
 
           <CardPreview>
             {!isLoading && (
-              <>
-                <DataGrid
-                  columnSizingOptions={{
-                    selection: { idealWidth: 30 },
-                  }}
-                  items={policies}
-                  columns={columns}
-                  sortable
-                  getRowId={item => item.id}
-                  focusMode="composite"
-                  resizableColumnsOptions={{ autoFitColumns: false }}
-                  resizableColumns={true}
-                >
-                  <DataGridHeader>
-                    <DataGridRow>
-                      {({ renderHeaderCell }) => (
-                        <DataGridHeaderCell>
-                          {renderHeaderCell()}
-                        </DataGridHeaderCell>
-                      )}
-                    </DataGridRow>
-                  </DataGridHeader>
+              <div>
+                {policies.length > 0 ? (
+                  <>
+                    <DataGrid
+                      columnSizingOptions={{
+                        selection: { idealWidth: 30 },
+                      }}
+                      items={policies}
+                      columns={columns}
+                      sortable
+                      getRowId={item => item.id}
+                      focusMode="composite"
+                      resizableColumnsOptions={{ autoFitColumns: false }}
+                      resizableColumns={true}
+                    >
+                      <DataGridHeader>
+                        <DataGridRow>
+                          {({ renderHeaderCell }) => (
+                            <DataGridHeaderCell>
+                              {renderHeaderCell()}
+                            </DataGridHeaderCell>
+                          )}
+                        </DataGridRow>
+                      </DataGridHeader>
 
-                  <DataGridBody<Policy>>
-                    {({ item, rowId }) => (
-                      <DataGridRow<Policy> key={rowId}>
-                        {({ renderCell }) => (
-                          <DataGridCell>{renderCell(item)}</DataGridCell>
+                      <DataGridBody<Policy>>
+                        {({ item, rowId }) => (
+                          <DataGridRow<Policy> key={rowId}>
+                            {({ renderCell }) => (
+                              <DataGridCell>{renderCell(item)}</DataGridCell>
+                            )}
+                          </DataGridRow>
                         )}
-                      </DataGridRow>
+                      </DataGridBody>
+                    </DataGrid>
+                    <div
+                      className={mergeClasses(
+                        styles.MarginTopBase,
+                        styles.PaginationWrapper,
+                      )}
+                    >
+                      <div className={styles.MarginBase}>
+                        <Pagination
+                          activePage={activePage}
+                          itemsCountPerPage={PAGE_SIZE}
+                          totalItemsCount={policyCount}
+                          pageRangeDisplayed={5}
+                          onChange={handlePageChange}
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div
+                    className={mergeClasses(
+                      styles.FullWidth,
+                      styles.AlignCenter,
+                      styles.TextNote,
+                      styles.TextSmall,
+                      styles.MarginBase,
                     )}
-                  </DataGridBody>
-                </DataGrid>
-                <div
-                  className={mergeClasses(
-                    styles.MarginTopBase,
-                    styles.PaginationWrapper,
-                  )}
-                >
-                  <div className={styles.MarginBase}>
-                    <Pagination
-                      activePage={activePage}
-                      itemsCountPerPage={PAGE_SIZE}
-                      totalItemsCount={policyCount}
-                      pageRangeDisplayed={5}
-                      onChange={handlePageChange}
-                    />
+                  >
+                    <span>
+                      {t('policy.not_found') +
+                        (userPermissions.some(x =>
+                          x.includes('Policy:WRITE:-1'),
+                        )
+                          ? ` ${t('policy.create_start')}.`
+                          : '')}
+                    </span>
                   </div>
-                </div>
-              </>
+                )}
+              </div>
             )}
           </CardPreview>
         </Card>

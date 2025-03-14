@@ -37,6 +37,10 @@ export const getAllPages = async (accessToken: string): Promise<Page[]> => {
       credentials: 'include',
     },
   )
+
+  if (!response.ok) {
+    return []
+  }
   const pages: [PageServiceStructure] = await response.json()
 
   const pagesList: Page[] = build(

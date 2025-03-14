@@ -20,6 +20,11 @@ export const getAllPolicies = async (
       credentials: 'include',
     },
   )
+
+  if (!response.ok) {
+    return []
+  }
+
   const policies: [PolicyStructure] = await response.json()
 
   return policies.map(
@@ -48,6 +53,7 @@ export const getPolicy = async (
       credentials: 'include',
     },
   )
+
   const permissions: PolicyPermissionStructure[] = await response.json()
   if (permissions.length === 0) {
     return {} as Policy

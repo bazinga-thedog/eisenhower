@@ -30,7 +30,7 @@ export default function App() {
                 <Route element={<PersistLogin />}>
                   <Route
                     element={
-                      <RequireAuth allowedPermissions={['Pages:VIEW:-1']} />
+                      <RequireAuth allowedPermissions={['Pages:READ:-1']} />
                     }
                   >
                     <Route path="/" element={<ContentPage />} />

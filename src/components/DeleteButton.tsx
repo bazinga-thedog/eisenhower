@@ -8,6 +8,7 @@ import {
 } from '@fluentui/react'
 import { Button } from '@fluentui/react-components'
 import { DeleteRegular } from '@fluentui/react-icons'
+import { t } from 'i18next'
 
 const DeleteButton: React.FC<{
   props: { action: string }
@@ -32,7 +33,7 @@ const DeleteButton: React.FC<{
     <>
       {/* Delete Button */}
       <Button icon={<DeleteRegular />} onClick={openDialog}>
-        Delete ###
+        {t('general.delete')}
       </Button>
 
       {/* Confirmation Dialog */}

@@ -211,14 +211,14 @@ const PolicyEdit = () => {
         return a.asset?.localeCompare(b.asset)
       },
       renderHeaderCell: () => {
-        return 'Asset###'
+        return t('policies.asset')
       },
       renderCell: item => {
         return (
           <TableCellLayout>
             <Combobox
               size="small"
-              placeholder="Select an asset ###"
+              placeholder={t('policies.asset_select')}
               className={styles.tweakCombo}
               clearable
               value={item.asset}
@@ -241,14 +241,14 @@ const PolicyEdit = () => {
         return a.operation?.localeCompare(b.asset)
       },
       renderHeaderCell: () => {
-        return 'Operation###'
+        return t('policies.operation')
       },
       renderCell: item => {
         return (
           <TableCellLayout>
             <Combobox
               size="small"
-              placeholder="Select operation ###"
+              placeholder={t('policies.operation_select')}
               className={styles.tweakCombo}
               value={item.operation}
               onOptionSelect={(ev, data) =>
@@ -269,7 +269,7 @@ const PolicyEdit = () => {
         return a.resourceid[0] - b.resourceid[0]
       },
       renderHeaderCell: () => {
-        return 'Resource###'
+        return t('policies.resource')
       },
       renderCell: item => {
         return (
@@ -280,10 +280,14 @@ const PolicyEdit = () => {
                 value={item.resourceid[0] == -1 ? 'all' : 'restricted'}
                 onChange={(ev, data) => onResourceChange(ev, data, item.id)}
               >
-                <Radio value="all" label="All" className={styles.TextSmall} />
+                <Radio
+                  value="all"
+                  label={t('general.all')}
+                  className={styles.TextSmall}
+                />
                 <Radio
                   value="restricted"
-                  label="Restricted"
+                  label={t('general.restricted')}
                   className={styles.TextSmall}
                 />
               </RadioGroup>
@@ -392,7 +396,7 @@ const PolicyEdit = () => {
         return a.title.localeCompare(b.title)
       },
       renderHeaderCell: () => {
-        return 'Title###'
+        return t('general.title')
       },
       renderCell: item => {
         return <TableCellLayout>{item.title}</TableCellLayout>
@@ -468,18 +472,14 @@ const PolicyEdit = () => {
       : await updatePolicy(policy, accessToken)
     if (result.success) {
       showMessage(
-        'Policy ' +
-          policy.name +
-          ' has been successfully ' +
-          (isNew ? 'created' : 'updated') +
-          '###',
+        `${t('policy.policy')} "${policy.name}" ${t('general.success_past')} ${isNew ? t('general.created') : t('general.updated')}`,
         '',
         'success',
         2000,
       )
       navToPage('/policies')
     } else {
-      showMessage('Policy creation failed###', result.message, 'error', 5000)
+      showMessage(t('policy.error_creation'), result.message, 'error', 5000)
       setError(result.message)
     }
   }
@@ -502,7 +502,7 @@ const PolicyEdit = () => {
     <div className={styles.FullWidth}>
       <div className={styles.ColumnWrapper}>
         <div className={styles.FullWidth}>
-          <Breadcrumbs current={isNew ? 'create###' : formData.name} />
+          <Breadcrumbs current={isNew ? t('general.create') : formData.name} />
         </div>
         <div
           className={mergeClasses(
@@ -512,7 +512,7 @@ const PolicyEdit = () => {
             styles.ScrollableContent,
           )}
         >
-          <Title3>{isNew ? 'Create policy###' : 'Edit policy###'}</Title3>
+          <Title3>{isNew ? t('policy.create') : t('policy.edit')}</Title3>
           <div
             className={mergeClasses(
               styles.LayoutColumns,
@@ -595,7 +595,7 @@ const PolicyEdit = () => {
                         >
                           <div>
                             <Label htmlFor="name" className={styles.Label}>
-                              {'Name###' + ' *'}
+                              {t('general.name') + ' *'}
                             </Label>
                           </div>
                           <div
@@ -605,7 +605,7 @@ const PolicyEdit = () => {
                               styles.TextSmall,
                             )}
                           >
-                            Text description Lorem Ipsum###
+                            {`${t('policies.description_name')}`}
                           </div>
                           <Input
                             type="text"
@@ -615,7 +615,7 @@ const PolicyEdit = () => {
                             onChange={e => {
                               handleChange(e, 20)
                             }}
-                            placeholder={'Insert policy name###'}
+                            placeholder={t('policy:name_ph')}
                             required
                             className={mergeClasses(
                               styles.FormControlsFullWidth,
@@ -628,7 +628,7 @@ const PolicyEdit = () => {
                               htmlFor="description"
                               className={styles.Label}
                             >
-                              {'Description###' + ' *'}
+                              {t('general.description') + ' *'}
                             </Label>
                           </div>
                           <Input
@@ -639,7 +639,7 @@ const PolicyEdit = () => {
                             onChange={e => {
                               handleChange(e, 90)
                             }}
-                            placeholder={'Insert policy description###'}
+                            placeholder={t('policy:description_ph')}
                             required
                             className={mergeClasses(
                               styles.FormControlsFullWidth,
@@ -649,7 +649,7 @@ const PolicyEdit = () => {
                         </div>
                         <TabList selectedValue={'permissions'}>
                           <Tab id="Permissions" value="permissions">
-                            Permissions ###
+                            {t('general.permissions')}
                           </Tab>
                         </TabList>
                         <div
@@ -719,9 +719,7 @@ const PolicyEdit = () => {
                                 styles.TextSmall,
                               )}
                             >
-                              <span>
-                                {"Policy doesn't have any permission###"}
-                              </span>
+                              <span>{t('policies.no_permissions')}</span>
                             </div>
                           )}
                           <div
@@ -733,7 +731,7 @@ const PolicyEdit = () => {
                           >
                             <div className={styles.Column6}>
                               <Button onClick={addNewPermission}>
-                                Add new permission
+                                {t('policy.add_permission')}
                               </Button>
                             </div>
                             <div
@@ -743,8 +741,17 @@ const PolicyEdit = () => {
                               )}
                             >
                               <Button
+                                onClick={navToPage.bind(
+                                  null,
+                                  '/policies/' + id,
+                                )}
+                              >
+                                {t('general.cancel')}
+                              </Button>
+                              <Button
                                 type="submit"
                                 appearance="primary"
+                                className={styles.MarginLeftBase}
                                 onClick={e => savePolicy(e)}
                                 disabled={
                                   formData.name === '' ||
@@ -759,7 +766,7 @@ const PolicyEdit = () => {
                                   )
                                 }
                               >
-                                Save###
+                                {t('general.save')}
                               </Button>
                             </div>
                           </div>
@@ -776,14 +783,16 @@ const PolicyEdit = () => {
       <Dialog open={dialogOpen}>
         <DialogSurface>
           <DialogBody>
-            <DialogTitle>{'Select available### ' + lookupResource}</DialogTitle>
+            <DialogTitle>
+              {t('general.select_available') + ' ' + lookupResource}
+            </DialogTitle>
             <DialogContent>
               {!isLoadingLookup && (
                 <div>
                   <div className={styles.AlignLeft}>
                     <SearchBox
                       className={mergeClasses(styles.FormControlsFullWidth)}
-                      placeholder="Search###"
+                      placeholder={t('general.search')}
                       onChange={onSearchChange}
                     ></SearchBox>
                   </div>
@@ -845,7 +854,7 @@ const PolicyEdit = () => {
                     setDialogOpen(false)
                   }}
                 >
-                  Close###
+                  {t('general.close')}
                 </Button>
               </DialogTrigger>
               <Button
@@ -853,7 +862,7 @@ const PolicyEdit = () => {
                 onClick={onPermissionsSelected}
                 disabled={selectedIds.size === 0}
               >
-                Done###
+                {t('general.done')}
               </Button>
             </DialogActions>
           </DialogBody>

@@ -16,6 +16,9 @@ export const getLookup = async (
       credentials: 'include',
     },
   )
+  if (!response.ok) {
+    return []
+  }
   const lookups: [Lookup] = await response.json()
 
   return lookups

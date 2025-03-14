@@ -81,7 +81,7 @@ const PolicyDetails = () => {
         return a.asset.localeCompare(b.asset)
       },
       renderHeaderCell: () => {
-        return 'Asset###'
+        return t('policies.asset')
       },
       renderCell: item => {
         return <TableCellLayout>{item.asset}</TableCellLayout>
@@ -93,7 +93,7 @@ const PolicyDetails = () => {
         return a.operation.localeCompare(b.operation)
       },
       renderHeaderCell: () => {
-        return 'Permission###'
+        return t('policies.permission')
       },
       renderCell: item => {
         return <TableCellLayout>{item.operation}</TableCellLayout>
@@ -105,7 +105,7 @@ const PolicyDetails = () => {
         return a.resourceid[0] - b.resourceid[0]
       },
       renderHeaderCell: () => {
-        return 'Resource ###'
+        return t('policies.resource')
       },
 
       renderCell: item => {
@@ -121,7 +121,7 @@ const PolicyDetails = () => {
   const removePolicy = () => {
     deletePolicy(Number(id), accessToken).then(() => {
       showMessage(
-        'Policy "' + policy.name + '" deleted successfully###',
+        `${t('policies.policy')} "${policy.name}" ${t('policies.delete_success')}.`,
         '',
         'success',
       )
@@ -167,7 +167,7 @@ const PolicyDetails = () => {
                         onClick={() => navToPage('/policies/edit/' + id)}
                         className={styles.MarginLeftBase}
                       >
-                        Edit###
+                        {t('general.edit')}
                       </Button>
                     </>
                   ) : null}
