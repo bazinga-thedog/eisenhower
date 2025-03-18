@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import Structure from '../../styles/structure'
 import {
   Avatar,
@@ -16,11 +16,16 @@ import {
   DataGridRow,
   makeStyles,
   mergeClasses,
+  SelectTabData,
+  SelectTabEvent,
   Subtitle1,
+  Tab,
   TableCellLayout,
   TableColumnDefinition,
+  TabList,
+  TabValue,
 } from '@fluentui/react-components'
-import { useEffect, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import { t } from 'i18next'
 import { deletePolicy, getPolicy } from '../../services/PolicyService'
 import auth from '../../hooks/useAuth'
@@ -33,6 +38,8 @@ import { Edit16Filled } from '@fluentui/react-icons'
 import DeleteButton from '../DeleteButton'
 import { useMessage } from '../../context/MessageProvider'
 import i18n from '../../i18n'
+import Role from '../../types/Role'
+import { getRolesByPolicy } from '../../services/RoleService'
 
 const useStyles = makeStyles({
   ...Structure.Structure,
@@ -44,7 +51,9 @@ const PolicyDetails = () => {
   const { id } = useParams()
   const isNew = !parseInt(id || '0')
   const [policy, setPolicy] = useState({} as Policy)
+  const [roles, setRoles] = useState([] as Role[])
   const [isLoading, setIsLoading] = useState(true)
+  const [selectedTab, setSelectedTab] = useState<TabValue>('permissions')
 
   const navigate = useNavigate()
   const { showMessage } = useMessage()
@@ -66,6 +75,8 @@ const PolicyDetails = () => {
           return
         }
         setPolicy(policy)
+        const roles = await getRolesByPolicy(Number(id) || 0, accessToken)
+        setRoles(roles)
         setIsLoading(false)
       } else {
         navigate('/policies/edit/0', { replace: true })
@@ -74,6 +85,10 @@ const PolicyDetails = () => {
 
     fetchData().catch(console.error)
   }, [])
+
+  const onTabSelect = (event: SelectTabEvent, data: SelectTabData) => {
+    setSelectedTab(data.value)
+  }
 
   const columns: TableColumnDefinition<Permission>[] = [
     createTableColumn<Permission>({
@@ -119,6 +134,39 @@ const PolicyDetails = () => {
     }),
   ]
 
+  const columns_roles: TableColumnDefinition<Role>[] = [
+    createTableColumn<Role>({
+      columnId: 'name',
+      compare: (a, b) => {
+        return a.name.localeCompare(b.name)
+      },
+      renderHeaderCell: () => {
+        return t('general.name')
+      },
+      renderCell: item => {
+        return (
+          <TableCellLayout>
+            <Link to={'/roles/' + item.id} className={styles.LinkPrimary}>
+              {item.name}
+            </Link>
+          </TableCellLayout>
+        )
+      },
+    }),
+    createTableColumn<Role>({
+      columnId: 'description',
+      compare: (a, b) => {
+        return a.description.localeCompare(b.description)
+      },
+      renderHeaderCell: () => {
+        return t('general.description')
+      },
+      renderCell: item => {
+        return <TableCellLayout>{item.description}</TableCellLayout>
+      },
+    }),
+  ]
+
   const removePolicy = () => {
     deletePolicy(Number(id), accessToken).then(() => {
       showMessage(
@@ -129,6 +177,71 @@ const PolicyDetails = () => {
       navigate('/policies', { replace: true })
     })
   }
+
+  const PermissionPanel = memo(() => (
+    <div className={styles.MarginTopBase}>
+      <DataGrid
+        items={policy.permissions}
+        columns={columns}
+        sortable
+        getRowId={item => item.id}
+        focusMode="composite"
+        style={{ minWidth: '400px' }}
+      >
+        <DataGridHeader>
+          <DataGridRow>
+            {({ renderHeaderCell }) => (
+              <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
+            )}
+          </DataGridRow>
+        </DataGridHeader>
+
+        <DataGridBody<Permission>>
+          {({ item, rowId }) => (
+            <DataGridRow<Permission> key={rowId}>
+              {({ renderCell }) => (
+                <DataGridCell>{renderCell(item)}</DataGridCell>
+              )}
+            </DataGridRow>
+          )}
+        </DataGridBody>
+      </DataGrid>
+    </div>
+  ))
+
+  const RolesPanel = memo(() => (
+    <div className={mergeClasses(styles.MarginTopBase, styles.FullWidth)}>
+      <DataGrid
+        items={roles}
+        columns={columns_roles}
+        sortable
+        getRowId={item => item.id}
+        focusMode="composite"
+        resizableColumnsOptions={{
+          autoFitColumns: true,
+        }}
+        resizableColumns={true}
+      >
+        <DataGridHeader>
+          <DataGridRow>
+            {({ renderHeaderCell }) => (
+              <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
+            )}
+          </DataGridRow>
+        </DataGridHeader>
+
+        <DataGridBody<Role>>
+          {({ item, rowId }) => (
+            <DataGridRow<Role> key={rowId}>
+              {({ renderCell }) => (
+                <DataGridCell>{renderCell(item)}</DataGridCell>
+              )}
+            </DataGridRow>
+          )}
+        </DataGridBody>
+      </DataGrid>
+    </div>
+  ))
 
   return (
     <div className={styles.ColumnWrapper}>
@@ -225,40 +338,30 @@ const PolicyDetails = () => {
             }
           />
           <CardPreview>
-            <div
-              className={mergeClasses(styles.LayoutColumns, styles.MarginBase)}
-            >
-              <div className={styles.Column3}>
-                <div className={mergeClasses(styles.Flex)}>
+            <div>
+              <div
+                className={mergeClasses(
+                  styles.ColumnWrapper,
+                  styles.MarginBase,
+                )}
+              >
+                <div className={styles.Column3}>
                   {!isLoading && (
-                    <DataGrid
-                      items={policy.permissions}
-                      columns={columns}
-                      sortable
-                      getRowId={item => item.id}
-                      focusMode="composite"
-                      style={{ minWidth: '550px' }}
-                    >
-                      <DataGridHeader>
-                        <DataGridRow>
-                          {({ renderHeaderCell }) => (
-                            <DataGridHeaderCell>
-                              {renderHeaderCell()}
-                            </DataGridHeaderCell>
-                          )}
-                        </DataGridRow>
-                      </DataGridHeader>
-
-                      <DataGridBody<Permission>>
-                        {({ item, rowId }) => (
-                          <DataGridRow<Permission> key={rowId}>
-                            {({ renderCell }) => (
-                              <DataGridCell>{renderCell(item)}</DataGridCell>
-                            )}
-                          </DataGridRow>
-                        )}
-                      </DataGridBody>
-                    </DataGrid>
+                    <>
+                      <TabList
+                        selectedValue={selectedTab}
+                        onTabSelect={onTabSelect}
+                      >
+                        <Tab id="Permissions" value="permissions">
+                          {t('general.permissions')}
+                        </Tab>
+                        <Tab id="Roles" value="roles">
+                          {t('general.roles')}
+                        </Tab>
+                      </TabList>
+                      {selectedTab === 'permissions' && <PermissionPanel />}
+                      {selectedTab === 'roles' && <RolesPanel />}
+                    </>
                   )}
                 </div>
               </div>

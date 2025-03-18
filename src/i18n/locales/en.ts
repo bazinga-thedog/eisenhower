@@ -15,6 +15,7 @@ const enTranslations = {
       info: 'info',
       name: 'Name',
       permissions: 'Permissions',
+      roles: 'Roles',
       restricted: 'Restricted',
       save: 'Save',
       search: 'Search',
@@ -62,9 +63,17 @@ const enTranslations = {
       updatedon: 'Last updated on',
       updatedby: 'Last updated by',
     },
+    roles: {
+      create: 'Create role',
+      description: 'Configure the necessary roles to assign to specific users',
+      info_content:
+        'Manage available roles. Each role will have a set of policies, when you assign a policy to a user, that user will have the permissions granted by the policies in the application.',
+      role_plural: 'Roles',
+    },
     enums: {
       Pages: 'Pages',
       Policy: 'Policy',
+      Role: 'Role',
       User: 'User',
       READ: 'READ',
       WRITE: 'WRITE',

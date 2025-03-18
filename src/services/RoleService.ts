@@ -1,17 +1,12 @@
 import { configs_servicebus } from '../configs/configs_servicebus'
 import i18n from '../i18n'
-import Permission from '../types/Permission'
-import Policy, {
-  PolicyPermissionStructure,
-  PolicyStructure,
-} from '../types/Policy'
+import Policy from '../types/Policy'
+import Role, { RolePolicyStructure, RoleStructure } from '../types/Role'
 import { User } from '../types/User'
 
-export const getAllPolicies = async (
-  accessToken: string,
-): Promise<Policy[]> => {
+export const getAllRoles = async (accessToken: string): Promise<Role[]> => {
   const response: Response = await fetch(
-    configs_servicebus.HOST + '/api/policies',
+    configs_servicebus.HOST + '/api/roles',
     {
       method: 'GET',
       headers: {
@@ -27,26 +22,25 @@ export const getAllPolicies = async (
     return []
   }
 
-  const policies: PolicyStructure[] = await response.json()
+  const roles: RoleStructure[] = await response.json()
 
-  return policies.map(
+  return roles.map(
     x =>
       ({
         id: x.id,
         name: x.name,
-        description: x.description,
         updatedon: new Date(x.updatedon),
         updatedby: { name: x.user_name } as User,
-      }) as Policy,
+      }) as Role,
   )
 }
 
-export const getPolicy = async (
+export const getRolesByPolicy = async (
+  policy_id: number,
   accessToken: string,
-  id: string,
-): Promise<Policy> => {
+): Promise<Role[]> => {
   const response: Response = await fetch(
-    configs_servicebus.HOST + '/api/policies/' + id,
+    configs_servicebus.HOST + '/api/policies/' + policy_id + '/roles',
     {
       method: 'GET',
       headers: {
@@ -58,57 +52,79 @@ export const getPolicy = async (
     },
   )
 
-  const permissions: PolicyPermissionStructure[] = await response.json()
-  if (permissions.length === 0) {
-    return {} as Policy
+  if (!response.ok) {
+    return []
   }
 
-  let policy: Policy = {
-    id: permissions[0].id,
-    name: permissions[0].name,
-    description: permissions[0].description,
-    updatedby: { name: permissions[0].user_name } as User,
-    updatedon: new Date(permissions[0].updatedon),
-    permissions: [] as Permission[],
-  }
+  const roles: RoleStructure[] = await response.json()
 
-  permissions.forEach(x => {
-    if (
-      policy.permissions.find(y => {
-        return y.asset === x.asset && y.operation === x.operation
-      })
-    ) {
-      policy.permissions
-        .find(y => {
-          return y.asset === x.asset && y.operation === x.operation
-        })
-        ?.resourceid.push(x.resourceid)
-    } else {
-      policy.permissions.push({
+  return roles.map(
+    x =>
+      ({
         id: x.id,
-        asset: x.asset,
-        operation: x.operation,
-        resourceid: [x.resourceid],
-      } as Permission)
-    }
-  })
-
-  return policy
+        name: x.name,
+        description: x.description,
+        updatedon: new Date(x.updatedon),
+        updatedby: { name: x.user_name } as User,
+      }) as Role,
+  )
 }
 
-export const createPolicy = async (
-  policy: Policy,
+export const getRole = async (
+  accessToken: string,
+  id: string,
+): Promise<Role> => {
+  const response: Response = await fetch(
+    configs_servicebus.HOST + '/api/roles/' + id,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + accessToken,
+        'x-lang': i18n.language,
+      },
+      credentials: 'include',
+    },
+  )
+
+  const roleWithPolicies: RolePolicyStructure[] = await response.json()
+  if (roleWithPolicies.length === 0) {
+    return {} as Role
+  }
+
+  let role: Role = {
+    id: roleWithPolicies[0].id,
+    name: roleWithPolicies[0].name,
+    description: roleWithPolicies[0].description,
+    updatedby: { name: roleWithPolicies[0].user_name } as User,
+    updatedon: new Date(roleWithPolicies[0].updatedon),
+    policies: [] as Policy[],
+  }
+
+  roleWithPolicies.forEach(x => {
+    role.policies.push({
+      id: x.policy_id,
+      name: x.policy_name,
+      description: x.policy_description,
+    } as Policy)
+  })
+
+  return role
+}
+
+export const createRole = async (
+  role: Role,
   accessToken: string,
 ): Promise<{ success: boolean; message: string }> => {
   const response: Response = await fetch(
-    configs_servicebus.HOST + '/api/policies',
+    configs_servicebus.HOST + '/api/roles',
     {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + accessToken,
       },
-      body: JSON.stringify(policy),
+      body: JSON.stringify(role),
       credentials: 'include',
     },
   )
@@ -117,12 +133,12 @@ export const createPolicy = async (
   return { success: response.ok, message: result.message }
 }
 
-export const updatePolicy = async (
-  policy: Policy,
+export const updateRole = async (
+  role: Role,
   accessToken: string,
 ): Promise<{ success: boolean; message: string }> => {
   const response: Response = await fetch(
-    configs_servicebus.HOST + '/api/policies',
+    configs_servicebus.HOST + '/api/roles',
     {
       method: 'POST',
       headers: {
@@ -130,7 +146,7 @@ export const updatePolicy = async (
         Authorization: 'Bearer ' + accessToken,
         'x-lang': i18n.language,
       },
-      body: JSON.stringify(policy),
+      body: JSON.stringify(role),
       credentials: 'include',
     },
   )
@@ -139,12 +155,12 @@ export const updatePolicy = async (
   return { success: response.ok, message: result.message }
 }
 
-export const deletePolicy = async (
+export const deleteRole = async (
   id: number,
   accessToken: string,
 ): Promise<{ success: boolean; message: string }> => {
   const response: Response = await fetch(
-    configs_servicebus.HOST + '/api/policies/' + id,
+    configs_servicebus.HOST + '/api/roles/' + id,
     {
       method: 'DELETE',
       headers: {
@@ -159,6 +175,6 @@ export const deletePolicy = async (
   return { success: response.ok, message: result.message }
 }
 
-const PolicyService = () => {}
+const RoleService = () => {}
 
-export default PolicyService
+export default RoleService

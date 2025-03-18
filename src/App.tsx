@@ -15,6 +15,9 @@ import TestPage from './pages/TestPage'
 import PoliciesPage from './pages/PoliciesPage'
 import PolicyDetailsPage from './pages/PolicyDetailsPage'
 import PolicyEditPage from './pages/PolicyEditPage'
+import RolesPage from './pages/RolesPage'
+import RoleDetailsPage from './pages/RoleDetailsPage'
+import RoleEditPage from './pages/RoleEditPage'
 
 export default function App() {
   return (
@@ -43,6 +46,9 @@ export default function App() {
                       path="/policies/edit/:id"
                       element={<PolicyEditPage />}
                     />
+                    <Route path="/roles" element={<RolesPage />} />
+                    <Route path="/roles/:id" element={<RoleDetailsPage />} />
+                    <Route path="/roles/edit/:id" element={<RoleEditPage />} />
                     <Route path="/test" element={<TestPage />} />
                   </Route>
                 </Route>

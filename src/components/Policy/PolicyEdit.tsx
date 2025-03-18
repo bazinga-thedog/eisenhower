@@ -859,13 +859,15 @@ const PolicyEdit = () => {
                         styles.PaginationWrapper,
                       )}
                     >
-                      <Pagination
-                        activePage={activePage}
-                        itemsCountPerPage={PAGE_SIZE}
-                        totalItemsCount={lookupCount}
-                        pageRangeDisplayed={5}
-                        onChange={handlePageChange}
-                      />
+                      {lookupCount > PAGE_SIZE && (
+                        <Pagination
+                          activePage={activePage}
+                          itemsCountPerPage={PAGE_SIZE}
+                          totalItemsCount={lookupCount}
+                          pageRangeDisplayed={5}
+                          onChange={handlePageChange}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
