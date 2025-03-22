@@ -34,6 +34,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { t } from 'i18next'
 import auth from '../../hooks/useAuth'
 import Structure from '../../styles/structure'
+import { deletePolicy, getAllPolicies } from '../../services/PolicyService'
 import Spacing from '../../styles/spacing'
 import Format from '../../styles/format'
 import {
@@ -41,6 +42,7 @@ import {
   InfoFilled,
   MoreVerticalFilled,
 } from '@fluentui/react-icons'
+import Policy from '../../types/Policy'
 import Breadcrumbs from '../Breadcrumbs'
 import Pagination from 'react-js-pagination'
 import PaginationStyle from '../../styles/pagination'
@@ -53,8 +55,6 @@ import {
 } from '@fluentui/react'
 import { useMessage } from '../../context/MessageProvider'
 import i18n from '../../i18n'
-import Role from '../../types/Role'
-import { deleteRole, getAllRoles } from '../../services/RoleService'
 
 const useStyles = makeStyles({
   card: {
@@ -71,16 +71,16 @@ const useStyles = makeStyles({
   tweakIcon: { paddingTop: '5px' },
 })
 
-let allRoles: Role[] = []
+let allPolicies: Policy[] = []
 
-const RoleManager = () => {
+const PolicyManager = () => {
   const [isLoading, setIsLoading] = useState(true)
-  const [roles, setRoles] = useState([] as Role[])
+  const [policies, setPolicies] = useState([] as Policy[])
   const [selectedIds, setSelectedIds] = useState(new Set<number>())
   const [selection, setSelection] = useState(false as 'mixed' | boolean)
   const [activePage, setActivePage] = useState(1)
   const [searchText, setSearchText] = useState('')
-  const [roleCount, setRoleCount] = useState(0)
+  const [policyCount, setPolicyCount] = useState(0)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [inputValue, setInputValue] = useState('')
 
@@ -98,10 +98,10 @@ const RoleManager = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const roles = await getAllRoles(accessToken)
-      setRoles(roles.slice(0, PAGE_SIZE))
-      allRoles = roles
-      setRoleCount(allRoles.length)
+      const policies = await getAllPolicies(accessToken)
+      setPolicies(policies.slice(0, PAGE_SIZE))
+      allPolicies = policies
+      setPolicyCount(allPolicies.length)
       setIsLoading(false)
     }
 
@@ -114,20 +114,20 @@ const RoleManager = () => {
   ) => void = (_, data) => {
     setActivePage(1)
     setSearchText(data.value)
-    let newRoleList = allRoles.filter(
+    let newPolicyList = allPolicies.filter(
       x =>
         !data.value ||
         x.name.toLowerCase().includes(data.value.toLowerCase()) ||
         x.updatedby.name.toLowerCase().includes(data.value.toLowerCase()),
     )
-    setRoleCount(newRoleList.length)
-    newRoleList = newRoleList.slice(0, PAGE_SIZE)
-    setRoles(newRoleList)
+    setPolicyCount(newPolicyList.length)
+    newPolicyList = newPolicyList.slice(0, PAGE_SIZE)
+    setPolicies(newPolicyList)
   }
 
   const styles = useStyles()
 
-  const columns: TableColumnDefinition<Role>[] = [
+  const columns: TableColumnDefinition<Policy>[] = [
     createTableColumn({
       columnId: 'selection',
       renderHeaderCell: () => (
@@ -150,7 +150,7 @@ const RoleManager = () => {
         />
       ),
     }),
-    createTableColumn<Role>({
+    createTableColumn<Policy>({
       columnId: 'name',
       compare: (a, b) => {
         return a.name.localeCompare(b.name)
@@ -161,24 +161,25 @@ const RoleManager = () => {
       renderCell: item => {
         return (
           <TableCellLayout>
-            <Link className={styles.LinkPrimary} to={'/roles/' + item.id}>
+            <Link className={styles.LinkPrimary} to={'/policies/' + item.id}>
               {item.name}
             </Link>
           </TableCellLayout>
         )
       },
     }),
-    createTableColumn<Role>({
+    createTableColumn<Policy>({
       columnId: 'updatedby',
       compare: (a, b) => {
         return a.updatedby.name.localeCompare(b.updatedby.name)
       },
       renderHeaderCell: () => {
-        return t('roles.updatedby')
+        return t('general.updatedby')
       },
       renderCell: item => {
         return (
           <TableCellLayout
+            className={styles.TextSmall}
             media={
               <Avatar
                 aria-label={item.updatedby.name}
@@ -191,17 +192,21 @@ const RoleManager = () => {
         )
       },
     }),
-    createTableColumn<Role>({
+    createTableColumn<Policy>({
       columnId: 'lastUpdated',
       compare: (a, b) => {
         return a.updatedon.getTime() - b.updatedon.getTime()
       },
       renderHeaderCell: () => {
-        return t('roles.updatedon')
+        return t('general.updatedon')
       },
 
       renderCell: item => {
-        return item.updatedon?.toLocaleString(i18n.language).replace(',', '')
+        return (
+          <TableCellLayout className={styles.TextSmall}>
+            {item.updatedon?.toLocaleString(i18n.language).replace(',', '')}
+          </TableCellLayout>
+        )
       },
     }),
   ]
@@ -218,7 +223,7 @@ const RoleManager = () => {
       selected ? newSelected.add(rowId) : newSelected.delete(rowId)
       setSelection(
         newSelected.size > 0
-          ? newSelected.size === allRoles.length
+          ? newSelected.size === allPolicies.length
             ? true
             : 'mixed'
           : false,
@@ -232,12 +237,12 @@ const RoleManager = () => {
     if (!data.checked) {
       setSelectedIds(new Set())
     } else {
-      newSelection = [...selectedIds, ...roles.map(x => x.id)]
+      newSelection = [...selectedIds, ...policies.map(x => x.id)]
       setSelectedIds(new Set(newSelection))
     }
     setSelection(
       data.checked
-        ? newSelection.length === allRoles.length
+        ? newSelection.length === allPolicies.length
           ? true
           : 'mixed'
         : false,
@@ -246,18 +251,18 @@ const RoleManager = () => {
 
   const handlePageChange = (pageNumber: number) => {
     setActivePage(pageNumber)
-    let newRoleList = allRoles.filter(
+    let newPolicyList = allPolicies.filter(
       x =>
         !searchText ||
         x.name.toLowerCase().includes(searchText.toLowerCase()) ||
         x.updatedby.name.toLowerCase().includes(searchText.toLowerCase()),
     )
-    setRoleCount(newRoleList.length)
-    newRoleList = newRoleList.slice(
+    setPolicyCount(newPolicyList.length)
+    newPolicyList = newPolicyList.slice(
       (pageNumber - 1) * PAGE_SIZE,
       (pageNumber - 1) * PAGE_SIZE + PAGE_SIZE,
     )
-    setRoles(newRoleList)
+    setPolicies(newPolicyList)
   }
 
   const openDialog = () => {
@@ -270,14 +275,14 @@ const RoleManager = () => {
       inputValue ===
       'DELETE ' +
         selectedIds.size +
-        ' role' +
-        (selectedIds.size === 1 ? '' : 's')
+        ' polic' +
+        (selectedIds.size === 1 ? 'y' : 'ies')
     ) {
       selectedIds.forEach(id => {
-        deleteRole(id, accessToken)
+        deletePolicy(id, accessToken)
       })
       showMessage(
-        `${t('roles.role_plural')} ${t('roles.delete_success')}`,
+        `${t('policies.policy_plural')} ${t('policies.delete_success')}`,
         '',
         'success',
       )
@@ -289,12 +294,12 @@ const RoleManager = () => {
   }
 
   return (
-    <div className={styles.ColumnWrapper}>
+    <div className={mergeClasses(styles.ColumnWrapper, styles.LayoutColumns)}>
       <div className={styles.FullWidth}>
         <Breadcrumbs current="" />
       </div>
-      <div className={mergeClasses(styles.FullWidth)}>
-        <Card className={styles.card}>
+      <div className={styles.Column6}>
+        <Card>
           <CardHeader
             header={
               <div
@@ -306,7 +311,7 @@ const RoleManager = () => {
                 <div className={styles.Column6}>
                   <div>
                     <div className={styles.Flex}>
-                      <Subtitle1>{t('roles.role_plural')}</Subtitle1>
+                      <Subtitle1>{t('policies.policy_plural')}</Subtitle1>
                       <span
                         className={mergeClasses(
                           styles.MarginLeftBase,
@@ -317,7 +322,7 @@ const RoleManager = () => {
                         |
                       </span>
                       <Tooltip
-                        content={t('roles.info_content')}
+                        content={t('policies.info_content')}
                         positioning="above-start"
                         withArrow
                         relationship="label"
@@ -350,7 +355,7 @@ const RoleManager = () => {
                         styles.TextNote,
                       )}
                     >
-                      <Caption1>{t('roles.description')}</Caption1>
+                      <Caption1>{t('policies.description')}</Caption1>
                     </div>
                     <div
                       className={mergeClasses(
@@ -370,13 +375,13 @@ const RoleManager = () => {
                 <div
                   className={mergeClasses(styles.Column6, styles.AlignRight)}
                 >
-                  {userPermissions.some(x => x.includes('Role:WRITE:-1')) ? (
+                  {userPermissions.some(x => x.includes('Policy:WRITE:-1')) ? (
                     <>
                       <Button
                         appearance="primary"
-                        onClick={() => navToPage('/roles/edit')}
+                        onClick={() => navToPage('/policies/edit')}
                       >
-                        {t('roles.create')}
+                        {t('policies.create')}
                       </Button>
                       <Menu>
                         <MenuTrigger disableButtonEnhancement>
@@ -406,16 +411,16 @@ const RoleManager = () => {
             }
           />
 
-          <CardPreview className={styles.ScrollableContent}>
+          <CardPreview>
             {!isLoading && (
               <div>
-                {roles.length > 0 ? (
+                {policies.length > 0 ? (
                   <>
                     <DataGrid
                       columnSizingOptions={{
                         selection: { idealWidth: 30 },
                       }}
-                      items={roles}
+                      items={policies}
                       columns={columns}
                       sortable
                       getRowId={item => item.id}
@@ -433,9 +438,9 @@ const RoleManager = () => {
                         </DataGridRow>
                       </DataGridHeader>
 
-                      <DataGridBody<Role>>
+                      <DataGridBody<Policy>>
                         {({ item, rowId }) => (
-                          <DataGridRow<Role> key={rowId}>
+                          <DataGridRow<Policy> key={rowId}>
                             {({ renderCell }) => (
                               <DataGridCell>{renderCell(item)}</DataGridCell>
                             )}
@@ -449,12 +454,12 @@ const RoleManager = () => {
                         styles.PaginationWrapper,
                       )}
                     >
-                      {roleCount > PAGE_SIZE && (
+                      {policyCount > PAGE_SIZE && (
                         <div className={styles.MarginBase}>
                           <Pagination
                             activePage={activePage}
                             itemsCountPerPage={PAGE_SIZE}
-                            totalItemsCount={roleCount}
+                            totalItemsCount={policyCount}
                             pageRangeDisplayed={5}
                             onChange={handlePageChange}
                           />
@@ -473,9 +478,11 @@ const RoleManager = () => {
                     )}
                   >
                     <span>
-                      {t('roles.not_found') +
-                        (userPermissions.some(x => x.includes('Role:WRITE:-1'))
-                          ? ` ${t('roles.create_start')}.`
+                      {t('policies.not_found') +
+                        (userPermissions.some(x =>
+                          x.includes('Policy:WRITE:-1'),
+                        )
+                          ? ` ${t('policies.create_start')}.`
                           : '')}
                     </span>
                   </div>
@@ -489,11 +496,11 @@ const RoleManager = () => {
           onDismiss={closeDialog}
           dialogContentProps={{
             title: t('general.are_you_sure'),
-            subText: `${t('general.type')} "DELETE ${selectedIds.size} role${selectedIds.size === 1 ? `` : `s`}" ${t('general.to_confirm_undone')}. `,
+            subText: `${t('general.type')} "DELETE ${selectedIds.size} polic${selectedIds.size === 1 ? `y` : `ies`}" ${t('general.to_confirm_undone')}. `,
           }}
         >
           <TextField
-            placeholder={`${t('general.type')} "DELETE ${selectedIds.size} role${selectedIds.size === 1 ? `` : `s`}" ${t('general.to_confirm')}.`}
+            placeholder={`${t('general.type')} "DELETE ${selectedIds.size} polic${selectedIds.size === 1 ? `y` : `ies`}" ${t('general.to_confirm')}.`}
             value={inputValue}
             onChange={(e, newValue) => setInputValue(newValue || '')}
           />
@@ -503,7 +510,7 @@ const RoleManager = () => {
               text={t('general.delete')}
               disabled={
                 inputValue !==
-                `DELETE ${selectedIds.size} role${selectedIds.size === 1 ? `` : `s`}`
+                `DELETE ${selectedIds.size} polic${selectedIds.size === 1 ? `y` : `ies`}`
               }
             />
             <DefaultButton onClick={closeDialog} text={t('general.cancel')} />
@@ -514,4 +521,4 @@ const RoleManager = () => {
   )
 }
 
-export default RoleManager
+export default PolicyManager

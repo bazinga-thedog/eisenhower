@@ -20,11 +20,15 @@ const Spacing = {
     MarginLeftSmall: {
       marginLeft: tokens.spacingHorizontalXS,
     },
+
     MarginBottomSmall: {
-      marginBottom: tokens.spacingVerticalXS,
+      marginBottom: tokens.spacingVerticalS,
     },
     PaddingBase: {
       padding: tokens.spacingHorizontalM,
+    },
+    MarginBottomBase: {
+      marginBottom: tokens.spacingVerticalL,
     },
   },
 }

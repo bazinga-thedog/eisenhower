@@ -32,11 +32,13 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TableSelectionCell,
+  //TableSelectionCell,
   SearchBox,
   SearchBoxChangeEvent,
   InputOnChangeData,
+  TableSelectionCell,
   CheckboxOnChangeData,
+  //CheckboxOnChangeData,
 } from '@fluentui/react-components'
 import { useEffect, useState } from 'react'
 import { t } from 'i18next'
@@ -49,9 +51,10 @@ import PaginationStyle from '../../styles/pagination'
 import { DeleteRegular, InfoFilled } from '@fluentui/react-icons'
 import Pagination from 'react-js-pagination'
 import Role from '../../types/Role'
-import { createRole, getRole, updateRole } from '../../services/RoleService'
-import { getAllPolicies } from '../../services/PolicyService'
+import { getAllRoles, getRolesByUser } from '../../services/RoleService'
 import { useMessage } from '../../context/MessageProvider'
+import { User } from '../../types/User'
+import { createUser, getUser, updateUser } from '../../services/UsersService'
 
 const useStyles = makeStyles({
   ...Structure.Structure,
@@ -59,26 +62,27 @@ const useStyles = makeStyles({
   ...Spacing.Spacing,
   ...PaginationStyle.Pagination,
   tweakIcon: { paddingTop: '5px' },
-  tweakCombo: { minWidth: '0', '& input': { width: '100%' } },
-  tweakDropdown: { '& .fui-TableCellLayout__content': { width: '100%' } },
 })
 
-let allPolicies: Policy[] = []
+let allRoles: Role[] = []
 
-const RoleEdit = () => {
+const UserEdit = () => {
   const { id } = useParams()
   const isNew = !parseInt(id || '0')
   const [isLoading, setIsLoading] = useState(true)
-  const [isLoadingLookup, setIsLoadingPolicy] = useState(true)
+  const [isLoadingRoles, setIsLoadingRoles] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [policyList, setPolicyList] = useState([] as Policy[])
+  const [roleList, setRoleList] = useState([] as Role[])
   const [selectedIds, setSelectedIds] = useState(new Set<number | string>())
   const [selection, setSelection] = useState(false as 'mixed' | boolean)
-  //const [selectedRowId, setSelectedRowId] = useState(0)
   const [error, setError] = useState('')
   const [activePage, setActivePage] = useState(1)
   const [searchText, setSearchText] = useState('')
-  const [lookupCount, setPolicyCount] = useState(0)
+  const [roleCount, setRoleCount] = useState(0)
+  const [formData, setFormData] = useState({
+    user: { name: '', username: '', email: '' } as User,
+    roles: [] as Role[],
+  })
 
   const PAGE_SIZE = 5
 
@@ -92,27 +96,22 @@ const RoleEdit = () => {
     navigate(url)
   }
 
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    policies: [] as Policy[],
-  } as Role)
-
   useEffect(() => {
     const fetchData = async () => {
       if (!isNew) {
-        const role = await getRole(accessToken, id || '0')
-        if (!role.id) {
-          navigate('/policies', { replace: true })
+        const user = await getUser(accessToken, id || '0')
+        if (!user.id) {
+          navigate('/users', { replace: true })
           return
         }
-        setFormData(role)
+        const roles = await getRolesByUser(accessToken, Number(id) || 0)
+        setFormData({ user: user, roles: roles })
       } else {
-        formData.policies = []
+        formData.roles = []
       }
-      allPolicies = await getAllPolicies(accessToken)
-      setPolicyList(allPolicies.slice(0, PAGE_SIZE))
-      setPolicyCount(allPolicies.length)
+      allRoles = await getAllRoles(accessToken)
+      setRoleList(allRoles.slice(0, PAGE_SIZE))
+      setRoleCount(allRoles.length)
       setIsLoading(false)
     }
 
@@ -123,25 +122,17 @@ const RoleEdit = () => {
     setError('')
   }
 
-  const removePolicy = (id: number) => {
+  const addNewRole = () => {
     clearError()
-    setFormData({
-      name: formData.name,
-      description: formData.description,
-      policies: formData.policies.filter(item => item.id !== id),
-    } as Role)
-  }
-
-  const addNewPolicy = () => {
-    clearError()
-    setSelectedIds(new Set(formData.policies.map(x => x.id)))
+    setSelectedIds(new Set(formData.roles.map(x => x.id)))
+    setRoleList(allRoles)
     setActivePage(1)
-    setIsLoadingPolicy(false)
+    setIsLoadingRoles(false)
     setDialogOpen(true)
   }
 
-  const columns: TableColumnDefinition<Policy>[] = [
-    createTableColumn<Policy>({
+  const columns: TableColumnDefinition<Role>[] = [
+    createTableColumn<Role>({
       columnId: 'name',
       compare: (a, b) => {
         return a.name?.localeCompare(b.name)
@@ -153,7 +144,7 @@ const RoleEdit = () => {
         return <TableCellLayout> {item.name}</TableCellLayout>
       },
     }),
-    createTableColumn<Policy>({
+    createTableColumn<Role>({
       columnId: 'description',
       compare: (a, b) => {
         return a.description?.localeCompare(b.description)
@@ -165,7 +156,7 @@ const RoleEdit = () => {
         return <TableCellLayout>{item.description}</TableCellLayout>
       },
     }),
-    createTableColumn<Policy>({
+    createTableColumn<Role>({
       columnId: 'delete',
       compare: (a, b) => {
         return a.description?.localeCompare(b.description)
@@ -179,7 +170,7 @@ const RoleEdit = () => {
             <Button
               size="small"
               iconPosition="after"
-              onClick={() => removePolicy(item.id)}
+              onClick={() => removeRole(item.id)}
               icon={<DeleteRegular />}
             ></Button>
           </TableCellLayout>
@@ -202,7 +193,7 @@ const RoleEdit = () => {
         : newSelected.delete(rowId.toString())
       setSelection(
         newSelected.size > 0
-          ? newSelected.size === allPolicies.length
+          ? newSelected.size === allRoles.length
             ? true
             : 'mixed'
           : false,
@@ -216,19 +207,19 @@ const RoleEdit = () => {
     if (!data.checked) {
       setSelectedIds(new Set())
     } else {
-      newSelection = [...selectedIds, ...policyList.map(x => x.id)]
+      newSelection = [...selectedIds, ...roleList.map(x => x.id)]
       setSelectedIds(new Set(newSelection))
     }
     setSelection(
       data.checked
-        ? newSelection.length === allPolicies.length
+        ? newSelection.length === allRoles.length
           ? true
           : 'mixed'
         : false,
     )
   }
 
-  const policyColumns: TableColumnDefinition<Policy>[] = [
+  const columns_role: TableColumnDefinition<Role>[] = [
     createTableColumn({
       columnId: 'selection',
       renderHeaderCell: () => (
@@ -251,7 +242,7 @@ const RoleEdit = () => {
         />
       ),
     }),
-    createTableColumn<Policy>({
+    createTableColumn<Role>({
       columnId: 'title',
       compare: (a, b) => {
         return a.name.localeCompare(b.name)
@@ -271,15 +262,11 @@ const RoleEdit = () => {
   ): void => {
     const { name, value } = e.target
     if (length && value.length <= length) {
-      setFormData(prev => ({ ...prev, [name]: value }))
+      setFormData(prev => ({
+        ...prev,
+        user: { ...prev.user, [name]: value },
+      }))
     }
-    // Clear error when user starts typing
-    /*if (errors[name as keyof typeof errors]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }))
-    }
-    if (errors['submit']) {
-      setErrors(prev => ({ ...prev, ['submit']: undefined }))
-    }*/
   }
 
   const onSearchChange: (
@@ -288,75 +275,80 @@ const RoleEdit = () => {
   ) => void = (_, data) => {
     setActivePage(1)
     setSearchText(data.value)
-    let newLookupList = allPolicies.filter(
+    let newRoleList = allRoles.filter(
       x =>
         !data.value || x.name.toLowerCase().includes(data.value.toLowerCase()),
     )
-    setPolicyCount(newLookupList.length)
-    newLookupList = newLookupList.slice(0, PAGE_SIZE)
-    setPolicyList(newLookupList)
+    setRoleCount(newRoleList.length)
+    newRoleList = newRoleList.slice(0, PAGE_SIZE)
+    setRoleList(newRoleList)
   }
 
-  const onPoliciesSelected = () => {
-    formData.policies = allPolicies.filter(p => selectedIds.has(p.id))
+  const onRolesSelected = () => {
+    formData.roles = allRoles.filter(p => selectedIds.has(p.id))
     setSearchText('')
+    setActivePage(1)
     setSelectedIds(new Set())
     setSelection(false)
     setDialogOpen(false)
   }
 
-  /*const removePolicy = (id: number) => {
+  const removeRole = (id: number) => {
     clearError()
-    role.policies = role.policies.filter(item => item.id !== id)
-    SetRole(role)
-  }*/
+    setFormData(prev => ({
+      ...prev,
+      roles: formData.roles.filter(item => item.id !== id),
+    }))
+  }
 
-  const saveRole = async (e: any) => {
-    const role = {
+  const saveUser = async (e: any) => {
+    const user = {
       id: isNew ? 0 : parseInt(id || '0'),
-      name: formData.name,
-      description: formData.description,
-      policies: formData.policies,
-    } as Role
+      name: formData.user.name,
+      username: formData.user.username,
+      email: formData.user.email,
+    } as unknown as User
 
     e.preventDefault()
     const result = isNew
-      ? await createRole(role, accessToken)
-      : await updateRole(role, accessToken)
+      ? await createUser(user, formData.roles, accessToken)
+      : await updateUser(user, formData.roles, accessToken)
     if (result.success) {
       showMessage(
-        `${t('roles.role')} "${role.name}" ${t('general.success_past')} ${isNew ? t('general.created') : t('general.updated')}`,
+        `${t('users.user')} "${user.name}" ${t('general.success_past')} ${isNew ? t('general.created') : t('general.updated')}`,
         '',
         'success',
         2000,
       )
-      navToPage('/roles')
+      navToPage('/users')
     } else {
-      showMessage(t('roles.error_creation'), result.message, 'error', 5000)
+      showMessage(t('users.error_creation'), result.message, 'error', 5000)
       setError(result.message)
     }
   }
 
   const handlePageChange = (pageNumber: number) => {
     setActivePage(pageNumber)
-    let newPolicyList = allPolicies.filter(
+    let newRoleList = allRoles.filter(
       x =>
         !searchText ||
         x.name.toLowerCase().includes(searchText.toLowerCase()) ||
         x.description.toLowerCase().includes(searchText.toLowerCase()),
     )
-    setPolicyCount(newPolicyList.length)
-    newPolicyList = newPolicyList.slice(
+    setRoleCount(newRoleList.length)
+    newRoleList = newRoleList.slice(
       (pageNumber - 1) * PAGE_SIZE,
       (pageNumber - 1) * PAGE_SIZE + PAGE_SIZE,
     )
-    setPolicyList(newPolicyList)
+    setRoleList(newRoleList)
   }
 
   return (
     <div className={mergeClasses(styles.ColumnWrapper, styles.FullWidth)}>
       <div className={styles.FullWidth}>
-        <Breadcrumbs current={isNew ? t('general.create') : formData.name} />
+        <Breadcrumbs
+          current={isNew ? t('general.create') : formData.user.name}
+        />
       </div>
       <div
         className={mergeClasses(
@@ -365,7 +357,7 @@ const RoleEdit = () => {
           styles.MarginLeftBase,
         )}
       >
-        <Title3>{isNew ? t('roles.create') : t('roles.edit')}</Title3>
+        <Title3>{isNew ? t('users.create') : t('users.edit')}</Title3>
       </div>
       <div className={mergeClasses(styles.Column6, styles.MarginTopBase)}>
         <Card>
@@ -374,7 +366,7 @@ const RoleEdit = () => {
               <div className={styles.LayoutColumns}>
                 <div className={styles.FullWidth}>
                   <div className={styles.Flex}>
-                    <Subtitle1>{t('roles.roles_plural')}</Subtitle1>
+                    <Subtitle1>{t('users.user_plural')}</Subtitle1>
                     <span
                       className={mergeClasses(
                         styles.MarginLeftBase,
@@ -385,7 +377,7 @@ const RoleEdit = () => {
                       |
                     </span>
                     <Tooltip
-                      content={t('roles.info_content')}
+                      content={t('users.info_content')}
                       positioning="above-start"
                       withArrow
                       relationship="label"
@@ -415,7 +407,7 @@ const RoleEdit = () => {
                   <div
                     className={mergeClasses(styles.FullWidth, styles.TextNote)}
                   >
-                    <Caption1>{t('roles.description')}</Caption1>
+                    <Caption1>{t('users.description')}</Caption1>
                   </div>
                 </div>
                 <div
@@ -425,192 +417,245 @@ const RoleEdit = () => {
             }
           />
           <CardPreview>
-            {!isLoading && (
-              <form method="POST">
-                <div>
-                  <Divider />
+            <div>
+              {!isLoading && (
+                <form method="POST">
                   <div
                     className={mergeClasses(
-                      styles.FullWidth,
-                      styles.PaddingBase,
+                      styles.MarginBottomBase,
+                      styles.ScrollableContent,
                     )}
                   >
-                    <div>
-                      <Label htmlFor="name" className={styles.Label}>
-                        {t('general.name') + ' *'}
-                      </Label>
-                    </div>
+                    <Divider />
                     <div
                       className={mergeClasses(
-                        styles.MarginBottomSmall,
-                        styles.TextNote,
-                        styles.TextSmall,
+                        styles.FullWidth,
+                        styles.PaddingBase,
                       )}
                     >
-                      {`${t('roles.description_name')}`}
-                    </div>
-                    <Input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={e => {
-                        handleChange(e, 20)
-                      }}
-                      placeholder={t('roles.name_ph')}
-                      required
-                      className={mergeClasses(
-                        styles.FormControlsFullWidth,
-                        styles.MarginBottomSmall,
-                      )}
-                    />
-
-                    <div className={styles.MarginTopBase}>
-                      <Label htmlFor="description" className={styles.Label}>
-                        {t('general.description') + ' *'}
-                      </Label>
-                    </div>
-                    <Input
-                      type="text"
-                      id="description"
-                      name="description"
-                      value={formData.description}
-                      onChange={e => {
-                        handleChange(e, 90)
-                      }}
-                      placeholder={t('roles.description_ph')}
-                      required
-                      className={mergeClasses(
-                        styles.FormControlsFullWidth,
-                        styles.MarginBottomSmall,
-                      )}
-                    />
-                  </div>
-                  <TabList selectedValue={'policies'}>
-                    <Tab id="Policies" value="policies">
-                      {t('general.policies')}
-                    </Tab>
-                  </TabList>
-                  <div
-                    className={mergeClasses(
-                      styles.LayoutColumns,
-                      styles.MarginBase,
-                      styles.ColumnWrapper,
-                    )}
-                  >
-                    {formData.policies.length > 0 ? (
-                      <div className={styles.FullWidth}>
-                        <DataGrid
-                          items={formData.policies}
-                          columns={columns}
-                          sortable
-                          getRowId={item => item.id}
-                          focusMode="composite"
-                          size="extra-small"
-                          resizableColumnsOptions={{
-                            autoFitColumns: true,
-                          }}
-                          resizableColumns={true}
-                          columnSizingOptions={{
-                            name: { idealWidth: 100 },
-                            description: { minWidth: 300 },
-                            delete: { idealWidth: 30 },
-                          }}
-                        >
-                          <DataGridHeader>
-                            <DataGridRow>
-                              {({ renderHeaderCell }) => (
-                                <DataGridHeaderCell>
-                                  {renderHeaderCell()}
-                                </DataGridHeaderCell>
-                              )}
-                            </DataGridRow>
-                          </DataGridHeader>
-
-                          <DataGridBody<Policy>>
-                            {({ item, rowId }) => (
-                              <DataGridRow<Policy>
-                                key={rowId}
-                                className={styles.MarginTopBase}
-                              >
-                                {({ renderCell }) => (
-                                  <DataGridCell>
-                                    {renderCell(item)}
-                                  </DataGridCell>
-                                )}
-                              </DataGridRow>
-                            )}
-                          </DataGridBody>
-                        </DataGrid>
-                        {error && (
-                          <div
-                            className={mergeClasses(
-                              styles.TextError,
-                              styles.AlignLeft,
-                              styles.MarginLeftBase,
-                            )}
-                          >
-                            {error}
-                          </div>
-                        )}
+                      <div>
+                        <Label htmlFor="name" className={styles.Label}>
+                          {t('general.name') + ' *'}
+                        </Label>
                       </div>
-                    ) : (
                       <div
                         className={mergeClasses(
-                          styles.FullWidth,
-                          styles.AlignCenter,
+                          styles.MarginBottomSmall,
                           styles.TextNote,
                           styles.TextSmall,
                         )}
                       >
-                        <span>{t('roles.no_policies')}</span>
+                        {`${t('users.description_name')}`}
                       </div>
-                    )}
+                      <Input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value={formData.user.name}
+                        maxLength={20}
+                        onChange={e => {
+                          handleChange(e, 20)
+                        }}
+                        placeholder={t('users.name_ph')}
+                        required
+                        className={mergeClasses(
+                          styles.FormControlsFullWidth,
+                          styles.MarginBottomSmall,
+                        )}
+                      />
+                    </div>
                     <div
                       className={mergeClasses(
-                        styles.MarginTopBase,
-                        styles.ColumnWrapper,
                         styles.FullWidth,
+                        styles.PaddingBase,
                       )}
                     >
-                      <div className={styles.Column6}>
-                        <Button onClick={addNewPolicy}>
-                          {t('roles.add_policy')}
-                        </Button>
+                      <div>
+                        <Label htmlFor="username" className={styles.Label}>
+                          {t('general.username') + ' *'}
+                        </Label>
                       </div>
                       <div
                         className={mergeClasses(
-                          styles.Column6,
-                          styles.AlignRight,
+                          styles.MarginBottomSmall,
+                          styles.TextNote,
+                          styles.TextSmall,
                         )}
                       >
-                        <Button
-                          onClick={navToPage.bind(
-                            null,
-                            '/roles' + (id && parseInt(id) > 0 ? '/' + id : ''),
+                        {`${t('users.description_username')}`}
+                      </div>
+                      <Input
+                        type="text"
+                        id="username"
+                        name="username"
+                        value={formData.user.username}
+                        onChange={e => {
+                          handleChange(e, 30)
+                        }}
+                        placeholder={t('users.username_ph')}
+                        required
+                        className={mergeClasses(
+                          styles.FormControlsFullWidth,
+                          styles.MarginBottomSmall,
+                        )}
+                      />
+                    </div>
+                    <div
+                      className={mergeClasses(
+                        styles.FullWidth,
+                        styles.PaddingBase,
+                      )}
+                    >
+                      <div>
+                        <Label htmlFor="email" className={styles.Label}>
+                          {t('general.email') + ' *'}
+                        </Label>
+                      </div>
+                      <Input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={formData.user.email}
+                        maxLength={50}
+                        placeholder={t('users.email_ph')}
+                        required
+                        onChange={e => {
+                          handleChange(e, 50)
+                        }}
+                        className={mergeClasses(
+                          styles.FormControlsFullWidth,
+                          styles.MarginBottomSmall,
+                        )}
+                      />
+                    </div>
+                    <TabList selectedValue={'roles'}>
+                      <Tab id="Roles" value="roles">
+                        {t('general.roles')}
+                      </Tab>
+                    </TabList>
+                    <div
+                      className={mergeClasses(
+                        styles.LayoutColumns,
+                        styles.MarginBase,
+                        styles.ColumnWrapper,
+                      )}
+                    >
+                      {formData.roles.length > 0 ? (
+                        <div className={styles.FullWidth}>
+                          <DataGrid
+                            items={formData.roles}
+                            columns={columns}
+                            sortable
+                            getRowId={item => item.id}
+                            focusMode="composite"
+                            size="extra-small"
+                            resizableColumnsOptions={{
+                              autoFitColumns: false,
+                            }}
+                            resizableColumns={true}
+                            columnSizingOptions={{
+                              //name: { idealWidth: 100 },
+                              description: { minWidth: 300 },
+                              delete: { idealWidth: 30 },
+                            }}
+                          >
+                            <DataGridHeader>
+                              <DataGridRow>
+                                {({ renderHeaderCell }) => (
+                                  <DataGridHeaderCell>
+                                    {renderHeaderCell()}
+                                  </DataGridHeaderCell>
+                                )}
+                              </DataGridRow>
+                            </DataGridHeader>
+
+                            <DataGridBody<Policy>>
+                              {({ item, rowId }) => (
+                                <DataGridRow<Policy>
+                                  key={rowId}
+                                  className={styles.MarginTopBase}
+                                >
+                                  {({ renderCell }) => (
+                                    <DataGridCell>
+                                      {renderCell(item)}
+                                    </DataGridCell>
+                                  )}
+                                </DataGridRow>
+                              )}
+                            </DataGridBody>
+                          </DataGrid>
+                          {error && (
+                            <div
+                              className={mergeClasses(
+                                styles.TextError,
+                                styles.AlignLeft,
+                                styles.MarginLeftBase,
+                              )}
+                            >
+                              {error}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div
+                          className={mergeClasses(
+                            styles.FullWidth,
+                            styles.AlignCenter,
+                            styles.TextNote,
+                            styles.TextSmall,
                           )}
                         >
-                          {t('general.cancel')}
-                        </Button>
-                        <Button
-                          type="submit"
-                          appearance="primary"
-                          className={styles.MarginLeftBase}
-                          onClick={e => saveRole(e)}
-                          disabled={
-                            formData.name === '' ||
-                            formData.description === '' ||
-                            formData.policies.length === 0
-                          }
+                          <span>{t('users.no_roles')}</span>
+                        </div>
+                      )}
+                      <div
+                        className={mergeClasses(
+                          styles.MarginTopBase,
+                          styles.ColumnWrapper,
+                          styles.FullWidth,
+                        )}
+                      >
+                        <div className={styles.Column6}>
+                          <Button onClick={addNewRole}>
+                            {t('users.add_role')}
+                          </Button>
+                        </div>
+                        <div
+                          className={mergeClasses(
+                            styles.Column6,
+                            styles.AlignRight,
+                          )}
                         >
-                          {t('general.save')}
-                        </Button>
+                          <Button
+                            onClick={navToPage.bind(
+                              null,
+                              '/users' +
+                                (id && parseInt(id) > 0 ? '/' + id : ''),
+                            )}
+                          >
+                            {t('general.cancel')}
+                          </Button>
+                          <Button
+                            type="submit"
+                            appearance="primary"
+                            className={styles.MarginLeftBase}
+                            onClick={e => saveUser(e)}
+                            disabled={
+                              formData.user.name === '' ||
+                              formData.user.username === '' ||
+                              formData.user.email === '' ||
+                              formData.roles.length === 0
+                            }
+                          >
+                            {t('general.save')}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </form>
-            )}
+                </form>
+              )}
+            </div>
           </CardPreview>
         </Card>
       </div>
@@ -618,10 +663,10 @@ const RoleEdit = () => {
         <DialogSurface>
           <DialogBody>
             <DialogTitle>
-              {t('general.select_available') + ' ' + 'Policy ###'}
+              {t('general.select_available') + ' ' + t('general.roles')}
             </DialogTitle>
             <DialogContent>
-              {!isLoadingLookup && (
+              {!isLoadingRoles && (
                 <div>
                   <div className={styles.AlignLeft}>
                     <SearchBox
@@ -635,8 +680,8 @@ const RoleEdit = () => {
                       columnSizingOptions={{
                         selection: { idealWidth: 30 },
                       }}
-                      items={policyList}
-                      columns={policyColumns}
+                      items={roleList}
+                      columns={columns_role}
                       sortable
                       getRowId={item => item.id as number}
                       focusMode="composite"
@@ -670,7 +715,7 @@ const RoleEdit = () => {
                         )}
                       </DataGridBody>
                     </DataGrid>
-                    {lookupCount > PAGE_SIZE && (
+                    {roleCount > PAGE_SIZE && (
                       <div
                         className={mergeClasses(
                           styles.MarginTopBase,
@@ -680,7 +725,7 @@ const RoleEdit = () => {
                         <Pagination
                           activePage={activePage}
                           itemsCountPerPage={PAGE_SIZE}
-                          totalItemsCount={lookupCount}
+                          totalItemsCount={roleCount}
                           pageRangeDisplayed={5}
                           onChange={handlePageChange}
                         />
@@ -703,7 +748,7 @@ const RoleEdit = () => {
               </DialogTrigger>
               <Button
                 appearance="primary"
-                onClick={onPoliciesSelected}
+                onClick={onRolesSelected}
                 disabled={selectedIds.size === 0}
               >
                 {t('general.done')}
@@ -716,4 +761,4 @@ const RoleEdit = () => {
   )
 }
 
-export default RoleEdit
+export default UserEdit

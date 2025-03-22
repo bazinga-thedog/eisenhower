@@ -12,12 +12,15 @@ import RequireAuth from './components/RequireAuth'
 import { AuthProvider } from './context/AuthProvider'
 import PersistLogin from './components/PersistLogin'
 import TestPage from './pages/TestPage'
-import PoliciesPage from './pages/PoliciesPage'
-import PolicyDetailsPage from './pages/PolicyDetailsPage'
-import PolicyEditPage from './pages/PolicyEditPage'
-import RolesPage from './pages/RolesPage'
-import RoleDetailsPage from './pages/RoleDetailsPage'
-import RoleEditPage from './pages/RoleEditPage'
+import PoliciesPage from './pages/Policies/PoliciesPage'
+import PolicyDetailsPage from './pages/Policies/PolicyDetailsPage'
+import PolicyEditPage from './pages/Policies/PolicyEditPage'
+import RolesPage from './pages/Roles/RolesPage'
+import RoleDetailsPage from './pages/Roles/RoleDetailsPage'
+import RoleEditPage from './pages/Roles/RoleEditPage'
+import UsersPage from './pages/Users/UsersPage'
+import UsersDetailsPage from './pages/Users/UsersDetailsPage'
+import UsersEditPage from './pages/Users/UsersEditPage'
 
 export default function App() {
   return (
@@ -49,6 +52,9 @@ export default function App() {
                     <Route path="/roles" element={<RolesPage />} />
                     <Route path="/roles/:id" element={<RoleDetailsPage />} />
                     <Route path="/roles/edit/:id" element={<RoleEditPage />} />
+                    <Route path="/users" element={<UsersPage />} />
+                    <Route path="/users/:id" element={<UsersDetailsPage />} />
+                    <Route path="/users/edit/:id" element={<UsersEditPage />} />
                     <Route path="/test" element={<TestPage />} />
                   </Route>
                 </Route>

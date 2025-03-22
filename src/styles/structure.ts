@@ -30,12 +30,15 @@ const Structure = {
     Column6: {
       flex: '0 0 calc(50% - 5px)',
     },
+    Column4: {
+      flex: '0 0 calc(33% - 10px)',
+    },
     Column3: {
       flex: '0 0 calc(25% - 10px)',
     },
     ScrollableContent: {
+      height: 'calc(100vh - 290px)',
       overflowY: 'auto' as 'auto',
-      height: 'calc(100vh - 170px)',
     },
     AlignLeft: {
       textAlign: 'left' as 'left',

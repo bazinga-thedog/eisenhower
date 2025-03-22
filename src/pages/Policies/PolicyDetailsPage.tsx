@@ -1,5 +1,5 @@
-import Content from '../components/Content'
-import PolicyDetails from '../components/Policy/PolicyDetails'
+import Content from '../../components/Content'
+import PolicyDetails from '../../components/Policies/PolicyDetails'
 
 const PolicyDetailsPage = () => {
   return (

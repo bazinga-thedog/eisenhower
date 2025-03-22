@@ -1,9 +1,13 @@
+import Role from './Role'
+
 export interface User {
   id: string
   name: string
   username: string
   password: string
   email: string
-  createdAt: Date
-  updatedAt: Date
+  createdon: Date
+  updatedon: Date
+  updatedby: User
+  roles: Role[]
 }

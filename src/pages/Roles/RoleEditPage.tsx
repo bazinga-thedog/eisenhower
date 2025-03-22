@@ -1,5 +1,5 @@
-import Content from '../components/Content'
-import RoleEdit from '../components/Role/RoleEdit'
+import Content from '../../components/Content'
+import RoleEdit from '../../components/Roles/RoleEdit'
 
 const RoleEditPage = () => {
   return (

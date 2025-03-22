@@ -29,6 +29,7 @@ export const getAllRoles = async (accessToken: string): Promise<Role[]> => {
       ({
         id: x.id,
         name: x.name,
+        description: x.description,
         updatedon: new Date(x.updatedon),
         updatedby: { name: x.user_name } as User,
       }) as Role,
@@ -68,6 +69,39 @@ export const getRolesByPolicy = async (
         updatedby: { name: x.user_name } as User,
       }) as Role,
   )
+}
+
+export const getRolesByUser = async (
+  accessToken: string,
+  user_id: number,
+): Promise<Role[]> => {
+  const response: Response = await fetch(
+    configs_servicebus.HOST + '/api/users/' + user_id + '/roles',
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + accessToken,
+        'x-lang': i18n.language,
+      },
+      credentials: 'include',
+    },
+  )
+
+  if (!response.ok) {
+    return []
+  }
+
+  const { success, rows } = await response.json()
+  if (!success) return []
+
+  rows.forEach(
+    (x: { updatedon: Date }) => (x.updatedon = new Date(x.updatedon)),
+  )
+
+  const roles = rows
+
+  return roles
 }
 
 export const getRole = async (

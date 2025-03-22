@@ -1,5 +1,5 @@
-import Content from '../components/Content'
-import PolicyManager from '../components/Policy/PolicyManager'
+import Content from '../../components/Content'
+import PolicyManager from '../../components/Policies/PolicyManager'
 
 const PoliciesPage = () => {
   return (

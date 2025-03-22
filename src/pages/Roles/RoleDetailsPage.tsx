@@ -1,5 +1,5 @@
-import Content from '../components/Content'
-import RoleDetails from '../components/Role/RoleDetails'
+import Content from '../../components/Content'
+import RoleDetails from '../../components/Roles/RoleDetails'
 
 const RoleDetailsPage = () => {
   return (

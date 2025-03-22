@@ -34,7 +34,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { t } from 'i18next'
 import auth from '../../hooks/useAuth'
 import Structure from '../../styles/structure'
-import { deletePolicy, getAllPolicies } from '../../services/PolicyService'
 import Spacing from '../../styles/spacing'
 import Format from '../../styles/format'
 import {
@@ -42,7 +41,6 @@ import {
   InfoFilled,
   MoreVerticalFilled,
 } from '@fluentui/react-icons'
-import Policy from '../../types/Policy'
 import Breadcrumbs from '../Breadcrumbs'
 import Pagination from 'react-js-pagination'
 import PaginationStyle from '../../styles/pagination'
@@ -55,6 +53,8 @@ import {
 } from '@fluentui/react'
 import { useMessage } from '../../context/MessageProvider'
 import i18n from '../../i18n'
+import { User } from '../../types/User'
+import { deleteUser, getAllUsers } from '../../services/UsersService'
 
 const useStyles = makeStyles({
   card: {
@@ -71,16 +71,16 @@ const useStyles = makeStyles({
   tweakIcon: { paddingTop: '5px' },
 })
 
-let allPolicies: Policy[] = []
+let allUsers: User[] = []
 
-const PolicyManager = () => {
+const UsersManager = () => {
   const [isLoading, setIsLoading] = useState(true)
-  const [policies, setPolicies] = useState([] as Policy[])
-  const [selectedIds, setSelectedIds] = useState(new Set<number>())
+  const [users, setUsers] = useState([] as User[])
+  const [selectedIds, setSelectedIds] = useState(new Set<number | string>())
   const [selection, setSelection] = useState(false as 'mixed' | boolean)
   const [activePage, setActivePage] = useState(1)
   const [searchText, setSearchText] = useState('')
-  const [policyCount, setPolicyCount] = useState(0)
+  const [userCount, setUserCount] = useState(0)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [inputValue, setInputValue] = useState('')
 
@@ -98,10 +98,10 @@ const PolicyManager = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const policies = await getAllPolicies(accessToken)
-      setPolicies(policies.slice(0, PAGE_SIZE))
-      allPolicies = policies
-      setPolicyCount(allPolicies.length)
+      const userList = await getAllUsers(accessToken)
+      setUsers(userList.slice(0, PAGE_SIZE))
+      allUsers = userList
+      setUserCount(allUsers.length)
       setIsLoading(false)
     }
 
@@ -114,20 +114,20 @@ const PolicyManager = () => {
   ) => void = (_, data) => {
     setActivePage(1)
     setSearchText(data.value)
-    let newPolicyList = allPolicies.filter(
+    let newUserList = allUsers.filter(
       x =>
         !data.value ||
         x.name.toLowerCase().includes(data.value.toLowerCase()) ||
-        x.updatedby.name.toLowerCase().includes(data.value.toLowerCase()),
+        x.username.toLowerCase().includes(data.value.toLowerCase()),
     )
-    setPolicyCount(newPolicyList.length)
-    newPolicyList = newPolicyList.slice(0, PAGE_SIZE)
-    setPolicies(newPolicyList)
+    setUserCount(newUserList.length)
+    newUserList = newUserList.slice(0, PAGE_SIZE)
+    setUsers(newUserList)
   }
 
   const styles = useStyles()
 
-  const columns: TableColumnDefinition<Policy>[] = [
+  const columns: TableColumnDefinition<User>[] = [
     createTableColumn({
       columnId: 'selection',
       renderHeaderCell: () => (
@@ -150,7 +150,7 @@ const PolicyManager = () => {
         />
       ),
     }),
-    createTableColumn<Policy>({
+    createTableColumn<User>({
       columnId: 'name',
       compare: (a, b) => {
         return a.name.localeCompare(b.name)
@@ -161,47 +161,52 @@ const PolicyManager = () => {
       renderCell: item => {
         return (
           <TableCellLayout>
-            <Link className={styles.LinkPrimary} to={'/policies/' + item.id}>
+            <Link className={styles.LinkPrimary} to={'/users/' + item.id}>
               {item.name}
             </Link>
           </TableCellLayout>
         )
       },
     }),
-    createTableColumn<Policy>({
+    createTableColumn<User>({
       columnId: 'updatedby',
       compare: (a, b) => {
-        return a.updatedby.name.localeCompare(b.updatedby.name)
+        return (a.updatedby?.name || '').localeCompare(b.updatedby?.name || '')
       },
       renderHeaderCell: () => {
-        return t('policies.updatedby')
+        return t('general.updatedby')
       },
       renderCell: item => {
         return (
           <TableCellLayout
+            className={styles.TextSmall}
             media={
               <Avatar
-                aria-label={item.updatedby.name}
-                name={item.updatedby.name}
+                aria-label={item.updatedby?.name}
+                name={item.updatedby?.name}
               />
             }
           >
-            {item.updatedby.name}
+            {item.updatedby?.name}
           </TableCellLayout>
         )
       },
     }),
-    createTableColumn<Policy>({
+    createTableColumn<User>({
       columnId: 'lastUpdated',
       compare: (a, b) => {
         return a.updatedon.getTime() - b.updatedon.getTime()
       },
       renderHeaderCell: () => {
-        return t('policies.updatedon')
+        return t('general.updatedon')
       },
 
       renderCell: item => {
-        return item.updatedon?.toLocaleString(i18n.language).replace(',', '')
+        return (
+          <TableCellLayout className={styles.TextSmall}>
+            {item.updatedon?.toLocaleString(i18n.language).replace(',', '')}
+          </TableCellLayout>
+        )
       },
     }),
   ]
@@ -210,15 +215,17 @@ const PolicyManager = () => {
     rowId,
     selected,
   }: {
-    rowId: number
+    rowId: number | string
     selected: boolean
   }) => {
     setSelectedIds(prevSelected => {
       const newSelected = new Set(prevSelected)
-      selected ? newSelected.add(rowId) : newSelected.delete(rowId)
+      selected
+        ? newSelected.add(rowId.toString())
+        : newSelected.delete(rowId.toString())
       setSelection(
         newSelected.size > 0
-          ? newSelected.size === allPolicies.length
+          ? newSelected.size === allUsers.length
             ? true
             : 'mixed'
           : false,
@@ -232,12 +239,12 @@ const PolicyManager = () => {
     if (!data.checked) {
       setSelectedIds(new Set())
     } else {
-      newSelection = [...selectedIds, ...policies.map(x => x.id)]
+      newSelection = [...selectedIds, ...users.map(x => x.id)]
       setSelectedIds(new Set(newSelection))
     }
     setSelection(
       data.checked
-        ? newSelection.length === allPolicies.length
+        ? newSelection.length === allUsers.length
           ? true
           : 'mixed'
         : false,
@@ -246,18 +253,18 @@ const PolicyManager = () => {
 
   const handlePageChange = (pageNumber: number) => {
     setActivePage(pageNumber)
-    let newPolicyList = allPolicies.filter(
+    let newRoleList = allUsers.filter(
       x =>
         !searchText ||
         x.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        x.updatedby.name.toLowerCase().includes(searchText.toLowerCase()),
+        x.updatedby?.name.toLowerCase().includes(searchText.toLowerCase()),
     )
-    setPolicyCount(newPolicyList.length)
-    newPolicyList = newPolicyList.slice(
+    setUserCount(newRoleList.length)
+    newRoleList = newRoleList.slice(
       (pageNumber - 1) * PAGE_SIZE,
       (pageNumber - 1) * PAGE_SIZE + PAGE_SIZE,
     )
-    setPolicies(newPolicyList)
+    setUsers(newRoleList)
   }
 
   const openDialog = () => {
@@ -270,14 +277,14 @@ const PolicyManager = () => {
       inputValue ===
       'DELETE ' +
         selectedIds.size +
-        ' polic' +
-        (selectedIds.size === 1 ? 'y' : 'ies')
+        ' user' +
+        (selectedIds.size === 1 ? '' : 's')
     ) {
       selectedIds.forEach(id => {
-        deletePolicy(id, accessToken)
+        deleteUser(Number(id), accessToken)
       })
       showMessage(
-        `${t('policies.policy_plural')} ${t('policies.delete_success')}`,
+        `${t('users.user_plural')} ${t('users.delete_success')}`,
         '',
         'success',
       )
@@ -289,12 +296,12 @@ const PolicyManager = () => {
   }
 
   return (
-    <div className={styles.ColumnWrapper}>
+    <div className={mergeClasses(styles.ColumnWrapper, styles.LayoutColumns)}>
       <div className={styles.FullWidth}>
         <Breadcrumbs current="" />
       </div>
-      <div className={styles.FullWidth}>
-        <Card className={styles.card}>
+      <div className={mergeClasses(styles.Column6)}>
+        <Card>
           <CardHeader
             header={
               <div
@@ -306,7 +313,7 @@ const PolicyManager = () => {
                 <div className={styles.Column6}>
                   <div>
                     <div className={styles.Flex}>
-                      <Subtitle1>{t('policies.policy_plural')}</Subtitle1>
+                      <Subtitle1>{t('users.user_plural')}</Subtitle1>
                       <span
                         className={mergeClasses(
                           styles.MarginLeftBase,
@@ -317,7 +324,7 @@ const PolicyManager = () => {
                         |
                       </span>
                       <Tooltip
-                        content={t('policies.info_content')}
+                        content={t('users.info_content')}
                         positioning="above-start"
                         withArrow
                         relationship="label"
@@ -350,7 +357,7 @@ const PolicyManager = () => {
                         styles.TextNote,
                       )}
                     >
-                      <Caption1>{t('policies.description')}</Caption1>
+                      <Caption1>{t('users.description')}</Caption1>
                     </div>
                     <div
                       className={mergeClasses(
@@ -370,13 +377,13 @@ const PolicyManager = () => {
                 <div
                   className={mergeClasses(styles.Column6, styles.AlignRight)}
                 >
-                  {userPermissions.some(x => x.includes('Policy:WRITE:-1')) ? (
+                  {userPermissions.some(x => x.includes('User:WRITE:-1')) ? (
                     <>
                       <Button
                         appearance="primary"
-                        onClick={() => navToPage('/policies/edit')}
+                        onClick={() => navToPage('/users/edit')}
                       >
-                        {t('policies.create')}
+                        {t('users.create')}
                       </Button>
                       <Menu>
                         <MenuTrigger disableButtonEnhancement>
@@ -405,22 +412,24 @@ const PolicyManager = () => {
               </div>
             }
           />
-
-          <CardPreview>
+          <CardPreview className={styles.ScrollableContent}>
             {!isLoading && (
               <div>
-                {policies.length > 0 ? (
+                {users.length > 0 ? (
                   <>
                     <DataGrid
-                      columnSizingOptions={{
-                        selection: { idealWidth: 30 },
-                      }}
-                      items={policies}
+                      items={users}
                       columns={columns}
                       sortable
                       getRowId={item => item.id}
                       focusMode="composite"
-                      resizableColumnsOptions={{ autoFitColumns: false }}
+                      columnSizingOptions={{
+                        selection: { idealWidth: 50 },
+                        updatedon: { idealWidth: 100 },
+                      }}
+                      resizableColumnsOptions={{
+                        autoFitColumns: false,
+                      }}
                       resizableColumns={true}
                     >
                       <DataGridHeader>
@@ -433,9 +442,17 @@ const PolicyManager = () => {
                         </DataGridRow>
                       </DataGridHeader>
 
-                      <DataGridBody<Policy>>
+                      <DataGridBody<User>>
                         {({ item, rowId }) => (
-                          <DataGridRow<Policy> key={rowId}>
+                          <DataGridRow<User>
+                            key={rowId}
+                            onClick={(e: any) => {
+                              handleRowSelect({
+                                rowId: parseInt(rowId.toString()),
+                                selected: !selectedIds.has(rowId),
+                              })
+                            }}
+                          >
                             {({ renderCell }) => (
                               <DataGridCell>{renderCell(item)}</DataGridCell>
                             )}
@@ -449,12 +466,12 @@ const PolicyManager = () => {
                         styles.PaginationWrapper,
                       )}
                     >
-                      {policyCount > PAGE_SIZE && (
+                      {userCount > PAGE_SIZE && (
                         <div className={styles.MarginBase}>
                           <Pagination
                             activePage={activePage}
                             itemsCountPerPage={PAGE_SIZE}
-                            totalItemsCount={policyCount}
+                            totalItemsCount={userCount}
                             pageRangeDisplayed={5}
                             onChange={handlePageChange}
                           />
@@ -473,11 +490,9 @@ const PolicyManager = () => {
                     )}
                   >
                     <span>
-                      {t('policies.not_found') +
-                        (userPermissions.some(x =>
-                          x.includes('Policy:WRITE:-1'),
-                        )
-                          ? ` ${t('policies.create_start')}.`
+                      {t('users.not_found') +
+                        (userPermissions.some(x => x.includes('User:WRITE:-1'))
+                          ? ` ${t('users.create_start')}.`
                           : '')}
                     </span>
                   </div>
@@ -491,11 +506,11 @@ const PolicyManager = () => {
           onDismiss={closeDialog}
           dialogContentProps={{
             title: t('general.are_you_sure'),
-            subText: `${t('general.type')} "DELETE ${selectedIds.size} polic${selectedIds.size === 1 ? `y` : `ies`}" ${t('general.to_confirm_undone')}. `,
+            subText: `${t('general.type')} "DELETE ${selectedIds.size} user${selectedIds.size === 1 ? `` : `s`}" ${t('general.to_confirm_undone')}. `,
           }}
         >
           <TextField
-            placeholder={`${t('general.type')} "DELETE ${selectedIds.size} polic${selectedIds.size === 1 ? `y` : `ies`}" ${t('general.to_confirm')}.`}
+            placeholder={`${t('general.type')} "DELETE ${selectedIds.size} user${selectedIds.size === 1 ? `` : `s`}" ${t('general.to_confirm')}.`}
             value={inputValue}
             onChange={(e, newValue) => setInputValue(newValue || '')}
           />
@@ -505,7 +520,7 @@ const PolicyManager = () => {
               text={t('general.delete')}
               disabled={
                 inputValue !==
-                `DELETE ${selectedIds.size} polic${selectedIds.size === 1 ? `y` : `ies`}`
+                `DELETE ${selectedIds.size} user${selectedIds.size === 1 ? `` : `s`}`
               }
             />
             <DefaultButton onClick={closeDialog} text={t('general.cancel')} />
@@ -516,4 +531,4 @@ const PolicyManager = () => {
   )
 }
 
-export default PolicyManager
+export default UsersManager

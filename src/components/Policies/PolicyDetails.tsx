@@ -297,7 +297,7 @@ const PolicyDetails = () => {
               >
                 <div className={styles.Column3}>
                   <div className={styles.FullWidth}>
-                    <Caption1>{t('policies.updatedby')}</Caption1>
+                    <Caption1>{t('general.updatedby')}</Caption1>
                   </div>
                   <div className={styles.FullWidth}>
                     <div
@@ -318,7 +318,7 @@ const PolicyDetails = () => {
                 </div>
                 <div className={styles.Column6}>
                   <div className={styles.FullWidth}>
-                    <Caption1>{t('policies.updatedon')}</Caption1>
+                    <Caption1>{t('general.updatedon')}</Caption1>
                   </div>
                   <div className={styles.FullWidth}>
                     <div
