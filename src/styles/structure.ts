@@ -55,6 +55,9 @@ const Structure = {
     AlignSelfVerticalBottom: {
       alignSelf: 'flex-end',
     },
+    AlignFlexChildCenter: {
+      justifyContent: 'center' as 'center',
+    },
     FifthScreenWidth: {
       width: 'calc(100vw / 5)',
     },

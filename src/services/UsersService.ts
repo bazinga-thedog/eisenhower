@@ -73,6 +73,7 @@ export const createUser = async (
   roles: Role[],
   accessToken: string,
 ): Promise<{ success: boolean; message: string }> => {
+  user.password = Math.random().toString(36).slice(-10) // Generate random password
   const response: Response = await fetch(
     configs_servicebus.HOST + '/api/users',
     {
@@ -87,7 +88,10 @@ export const createUser = async (
   )
 
   const result = await response.json()
-  return { success: response.ok, message: result.message }
+  return {
+    success: response.ok,
+    message: response.ok ? user.password : result.message,
+  }
 }
 
 export const updateUser = async (

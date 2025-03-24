@@ -5,7 +5,7 @@ const enTranslations = {
       are_you_sure: 'Are you sure?',
       cancel: 'Cancel',
       close: 'Close',
-
+      copied: 'Copied',
       create: 'create',
       created: 'created',
       createdon: 'Created on',
@@ -93,7 +93,11 @@ const enTranslations = {
         'Manage users. Each user will have a set of roles, when you assign a role to a user, that user will have the permissions granted by the role in the application.',
       name_ph: 'Enter a name for the user',
       no_roles: "User doesn't have any role",
+      pass_copy_warning:
+        'This is the only time the password will be shown. Please copy and save it.',
       user_plural: 'Users',
+      user_created: 'Created user',
+
       username_ph: 'Enter a username for the user',
     },
     enums: {

@@ -12,6 +12,12 @@ const Format = {
     TextError: {
       color: tokens.colorPaletteRedBorder2,
     },
+    TextSuccess: {
+      color: tokens.colorPaletteGreenBorder2,
+    },
+    TextBold: {
+      fontWeight: tokens.fontWeightBold,
+    },
     LinkPrimary: {
       color: tokens.colorBrandForeground1,
       ':hover': {

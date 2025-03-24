@@ -48,7 +48,12 @@ import Breadcrumbs from '../Breadcrumbs'
 import Format from '../../styles/format'
 import Spacing from '../../styles/spacing'
 import PaginationStyle from '../../styles/pagination'
-import { DeleteRegular, InfoFilled } from '@fluentui/react-icons'
+import {
+  CheckmarkCircleRegular,
+  CopyRegular,
+  DeleteRegular,
+  InfoFilled,
+} from '@fluentui/react-icons'
 import Pagination from 'react-js-pagination'
 import Role from '../../types/Role'
 import { getAllRoles, getRolesByUser } from '../../services/RoleService'
@@ -83,6 +88,9 @@ const UserEdit = () => {
     user: { name: '', username: '', email: '' } as User,
     roles: [] as Role[],
   })
+  const [isPasswordShown, setIsPasswordShown] = useState(false)
+  const [password, setPassword] = useState('')
+  const [copied, setCopied] = useState(false)
 
   const PAGE_SIZE = 5
 
@@ -314,13 +322,22 @@ const UserEdit = () => {
       ? await createUser(user, formData.roles, accessToken)
       : await updateUser(user, formData.roles, accessToken)
     if (result.success) {
-      showMessage(
-        `${t('users.user')} "${user.name}" ${t('general.success_past')} ${isNew ? t('general.created') : t('general.updated')}`,
-        '',
-        'success',
-        2000,
-      )
-      navToPage('/users')
+      setFormData({
+        user: { name: '', username: '', email: '' } as User,
+        roles: [] as Role[],
+      })
+      if (isNew) {
+        setPassword(result.message)
+        setIsPasswordShown(true)
+      } else {
+        showMessage(
+          `${t('users.user')} "${user.name}" ${t('general.success_past')} ${t('general.updated')}`,
+          '',
+          'success',
+          2000,
+        )
+        navToPage('/users')
+      }
     } else {
       showMessage(t('users.error_creation'), result.message, 'error', 5000)
       setError(result.message)
@@ -341,6 +358,26 @@ const UserEdit = () => {
       (pageNumber - 1) * PAGE_SIZE + PAGE_SIZE,
     )
     setRoleList(newRoleList)
+  }
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(password)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000) // Reset after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy: ', err)
+    }
+  }
+
+  const closePasswordDialog = () => {
+    showMessage(
+      `${t('users.user')} "${formData.user.name}" ${t('general.success_past')} ${t('general.created')}`,
+      '',
+      'success',
+      2000,
+    )
+    navToPage('/users')
   }
 
   return (
@@ -752,6 +789,42 @@ const UserEdit = () => {
                 disabled={selectedIds.size === 0}
               >
                 {t('general.done')}
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
+      <Dialog open={isPasswordShown}>
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>{t('users.user_created')}</DialogTitle>
+            <DialogContent>
+              <p>{t('users.pass_copy_warning')}</p>
+              <div
+                className={mergeClasses(
+                  styles.Flex,
+                  styles.AlignFlexChildCenter,
+                  styles.FullWidth,
+                  styles.TextPrimary,
+                  styles.TextBold,
+                )}
+              >
+                <p>{password}</p>
+                <Button
+                  icon={copied ? <CheckmarkCircleRegular /> : <CopyRegular />}
+                  appearance="subtle"
+                  onClick={handleCopy}
+                />
+                {copied && (
+                  <p
+                    className={styles.TextSuccess}
+                  >{`${t('general.copied')!}`}</p>
+                )}
+              </div>
+            </DialogContent>
+            <DialogActions>
+              <Button appearance="primary" onClick={closePasswordDialog}>
+                {t('general.close')}
               </Button>
             </DialogActions>
           </DialogBody>
