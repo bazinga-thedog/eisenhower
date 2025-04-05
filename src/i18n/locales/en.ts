@@ -100,6 +100,10 @@ const enTranslations = {
 
       username_ph: 'Enter a username for the user',
     },
+    serviceaccounts: {
+      serviceaccount_plural: 'Service Accounts',
+    },
+    /*Pages*/
     enums: {
       Pages: 'Pages',
       Policy: 'Policy',

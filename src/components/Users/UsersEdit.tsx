@@ -397,7 +397,7 @@ const UserEdit = () => {
         <Title3>{isNew ? t('users.create') : t('users.edit')}</Title3>
       </div>
       <div className={mergeClasses(styles.Column6, styles.MarginTopBase)}>
-        <Card>
+        <Card className={styles.CardWithTitleFullHeight}>
           <CardHeader
             header={
               <div className={styles.LayoutColumns}>

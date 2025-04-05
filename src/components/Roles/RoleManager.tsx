@@ -299,7 +299,7 @@ const RoleManager = () => {
         <Breadcrumbs current="" />
       </div>
       <div className={mergeClasses(styles.Column6)}>
-        <Card>
+        <Card className={styles.CardFullHeight}>
           <CardHeader
             header={
               <div
@@ -448,13 +448,14 @@ const RoleManager = () => {
                         )}
                       </DataGridBody>
                     </DataGrid>
-                    <div
-                      className={mergeClasses(
-                        styles.MarginTopBase,
-                        styles.PaginationWrapper,
-                      )}
-                    >
-                      {roleCount > PAGE_SIZE && (
+
+                    {roleCount > PAGE_SIZE && (
+                      <div
+                        className={mergeClasses(
+                          styles.MarginTopBase,
+                          styles.PaginationWrapper,
+                        )}
+                      >
                         <div className={styles.MarginBase}>
                           <Pagination
                             activePage={activePage}
@@ -464,8 +465,8 @@ const RoleManager = () => {
                             onChange={handlePageChange}
                           />
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div

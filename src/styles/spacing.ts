@@ -27,6 +27,9 @@ const Spacing = {
     PaddingBase: {
       padding: tokens.spacingHorizontalM,
     },
+    PaddingBottomBase: {
+      paddingBottom: tokens.spacingVerticalL,
+    },
     MarginBottomBase: {
       marginBottom: tokens.spacingVerticalL,
     },

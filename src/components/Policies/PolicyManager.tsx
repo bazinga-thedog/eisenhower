@@ -299,7 +299,7 @@ const PolicyManager = () => {
         <Breadcrumbs current="" />
       </div>
       <div className={styles.Column6}>
-        <Card>
+        <Card className={styles.CardFullHeight}>
           <CardHeader
             header={
               <div

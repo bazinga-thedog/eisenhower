@@ -301,7 +301,7 @@ const UsersManager = () => {
         <Breadcrumbs current="" />
       </div>
       <div className={mergeClasses(styles.Column6)}>
-        <Card>
+        <Card className={styles.CardFullHeight}>
           <CardHeader
             header={
               <div
@@ -460,13 +460,14 @@ const UsersManager = () => {
                         )}
                       </DataGridBody>
                     </DataGrid>
-                    <div
-                      className={mergeClasses(
-                        styles.MarginTopBase,
-                        styles.PaginationWrapper,
-                      )}
-                    >
-                      {userCount > PAGE_SIZE && (
+
+                    {userCount > PAGE_SIZE && (
+                      <div
+                        className={mergeClasses(
+                          styles.MarginTopBase,
+                          styles.PaginationWrapper,
+                        )}
+                      >
                         <div className={styles.MarginBase}>
                           <Pagination
                             activePage={activePage}
@@ -476,8 +477,8 @@ const UsersManager = () => {
                             onChange={handlePageChange}
                           />
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div

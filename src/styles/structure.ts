@@ -37,8 +37,14 @@ const Structure = {
       flex: '0 0 calc(25% - 10px)',
     },
     ScrollableContent: {
-      height: 'calc(100vh - 290px)',
+      maxHeight: 'calc(100vh - 300px)',
       overflowY: 'auto' as 'auto',
+    },
+    CardFullHeight: {
+      height: 'calc(100vh - 180px)',
+    },
+    CardWithTitleFullHeight: {
+      height: 'calc(100vh - 230px)',
     },
     AlignLeft: {
       textAlign: 'left' as 'left',

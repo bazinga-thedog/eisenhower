@@ -21,6 +21,9 @@ import RoleEditPage from './pages/Roles/RoleEditPage'
 import UsersPage from './pages/Users/UsersPage'
 import UsersDetailsPage from './pages/Users/UsersDetailsPage'
 import UsersEditPage from './pages/Users/UsersEditPage'
+import ServiceAccountPage from './pages/ServiceAccount/ServiceAccountPage'
+import ServiceAccountPageEdit from './pages/ServiceAccount/ServiceAccountEditPage'
+/*New Imports*/
 
 export default function App() {
   return (
@@ -55,6 +58,19 @@ export default function App() {
                     <Route path="/users" element={<UsersPage />} />
                     <Route path="/users/:id" element={<UsersDetailsPage />} />
                     <Route path="/users/edit/:id" element={<UsersEditPage />} />
+                    <Route
+                      path="/serviceaccounts"
+                      element={<ServiceAccountPage />}
+                    />
+                    <Route
+                      path="/serviceaccounts/:id"
+                      element={<ServiceAccountPageEdit />}
+                    />
+                    <Route
+                      path="/serviceaccounts/edit/:id"
+                      element={<ServiceAccountPageEdit />}
+                    />
+                    {/*New Routes*/}
                     <Route path="/test" element={<TestPage />} />
                   </Route>
                 </Route>
